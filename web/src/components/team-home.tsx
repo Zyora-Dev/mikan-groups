@@ -14,7 +14,7 @@ const CARDS = [
     Icon: Building2,
     title: "Client organisations",
     body: "Create client companies and invite the people who work with you.",
-    ready: false,
+    ready: true,
   },
   {
     href: "/internal/erp/team/projects",

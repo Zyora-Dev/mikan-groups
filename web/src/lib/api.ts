@@ -76,6 +76,54 @@ export interface NewTeamMember {
   job_title?: string;
 }
 
+export type ClientType =
+  | "main_contractor" | "fabricator" | "epc"
+  | "developer" | "consultancy" | "authority" | "other";
+
+export type ContractingEntity = "singapore" | "ireland" | "india";
+export type ClientStatus = "prospect" | "active" | "dormant" | "archived";
+
+export interface ClientSummary {
+  id: string;
+  name: string;
+  trading_name: string | null;
+  slug: string;
+  client_type: ClientType;
+  country: string | null;
+  contracting_entity: ContractingEntity;
+  status: ClientStatus;
+  sector: string | null;
+  nda_signed: boolean;
+  is_active: boolean;
+  user_count: number;
+  created_at: string;
+}
+
+export interface NewClient {
+  name: string;
+  client_type: ClientType;
+  country: string;
+  contracting_entity: ContractingEntity;
+  contact_email?: string;
+  default_standard?: string;
+}
+
+export const CLIENT_TYPE_LABELS: Record<ClientType, string> = {
+  main_contractor: "Main contractor",
+  fabricator: "Fabricator",
+  epc: "EPC contractor",
+  developer: "Developer",
+  consultancy: "Consultancy",
+  authority: "Authority",
+  other: "Other",
+};
+
+export const ENTITY_LABELS: Record<ContractingEntity, string> = {
+  singapore: "Singapore",
+  ireland: "Ireland",
+  india: "India",
+};
+
 export const api = {
   /** `internal` restricts the attempt to Mikan staff accounts. */
   login: (email: string, password: string, internal = false) =>
@@ -120,5 +168,27 @@ export const api = {
 
     unlock: (id: string) =>
       request<void>(`/team/members/${id}/unlock`, { method: "POST" }),
+  },
+
+  clients: {
+    list: (params?: { search?: string; status?: ClientStatus }) => {
+      const q = new URLSearchParams();
+      if (params?.search) q.set("search", params.search);
+      if (params?.status) q.set("status", params.status);
+      const qs = q.toString();
+      return request<ClientSummary[]>(`/clients${qs ? `?${qs}` : ""}`);
+    },
+
+    create: (body: NewClient) =>
+      request<ClientSummary>("/clients", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+
+    update: (id: string, body: Record<string, unknown>) =>
+      request<ClientSummary>(`/clients/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      }),
   },
 };
