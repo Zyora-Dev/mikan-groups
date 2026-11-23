@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: mikan-groups
+    runtime: node
+    plan: starter          # free tier sleeps after inactivity; starter keeps it warm
+    region: singapore      # closest to Mikan's primary market
+    branch: main
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 22.11.0
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_TELEMETRY_DISABLED
+        value: "1"
