@@ -54,6 +54,28 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return res.status === 204 ? (undefined as T) : ((await res.json()) as T);
 }
 
+export interface TeamMember {
+  id: string;
+  full_name: string;
+  email: string;
+  role: UserRole;
+  job_title: string | null;
+  phone: string | null;
+  is_active: boolean;
+  must_change_password: boolean;
+  locked_until: string | null;
+  last_login_at: string | null;
+  created_at: string;
+}
+
+export interface NewTeamMember {
+  full_name: string;
+  email: string;
+  password: string;
+  role: "admin" | "engineer";
+  job_title?: string;
+}
+
 export const api = {
   /** `internal` restricts the attempt to Mikan staff accounts. */
   login: (email: string, password: string, internal = false) =>
@@ -71,4 +93,32 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ current_password, new_password }),
     }),
+
+  team: {
+    list: () => request<TeamMember[]>("/team/members"),
+
+    create: (body: NewTeamMember) =>
+      request<TeamMember>("/team/members", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+
+    update: (
+      id: string,
+      body: Partial<{ role: "admin" | "engineer"; is_active: boolean; full_name: string; job_title: string }>,
+    ) =>
+      request<TeamMember>(`/team/members/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      }),
+
+    resetPassword: (id: string, new_password: string) =>
+      request<void>(`/team/members/${id}/password`, {
+        method: "POST",
+        body: JSON.stringify({ new_password }),
+      }),
+
+    unlock: (id: string) =>
+      request<void>(`/team/members/${id}/unlock`, { method: "POST" }),
+  },
 };

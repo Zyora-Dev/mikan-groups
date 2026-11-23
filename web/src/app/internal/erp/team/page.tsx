@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { TeamDashboard } from "@/components/team-dashboard";
+import { TeamHome } from "@/components/team-home";
+import { TeamShell } from "@/components/team-shell";
 
 export const metadata: Metadata = {
   title: "Team Dashboard",
@@ -7,5 +8,9 @@ export const metadata: Metadata = {
 };
 
 export default function TeamPage() {
-  return <TeamDashboard />;
+  return (
+    <TeamShell>
+      <TeamHome />
+    </TeamShell>
+  );
 }
