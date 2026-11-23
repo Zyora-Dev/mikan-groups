@@ -2,20 +2,92 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* Brand, from the Mikan logo */
+    --brand-green: 152 100% 33%;   /* #00A651 */
+    --brand-blue: 207 100% 40%;    /* #0072CE */
+    --brand-cyan: 199 76% 52%;     /* #29ABE2 */
+    --brand-orange: 33 93% 54%;    /* #F7941D */
+    --brand-ember: 11 88% 54%;     /* #F04E23 */
+
+    /* Technical slate neutrals, biased cool toward the blue */
+    --background: 0 0% 100%;
+    --foreground: 213 32% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 213 32% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 213 32% 12%;
+    --primary: 152 100% 29%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 30% 96%;
+    --secondary-foreground: 213 32% 16%;
+    --muted: 210 30% 96%;
+    --muted-foreground: 213 24% 16%;
+    --accent: 207 100% 40%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 11 88% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 213 20% 89%;
+    --input: 213 20% 89%;
+    --ring: 152 100% 33%;
+    --radius: 0.25rem;
+  }
+
+  .dark {
+    --background: 213 38% 7%;
+    --foreground: 210 24% 95%;
+    --card: 213 34% 10%;
+    --card-foreground: 210 24% 95%;
+    --popover: 213 34% 10%;
+    --popover-foreground: 210 24% 95%;
+    --primary: 152 82% 42%;
+    --primary-foreground: 213 38% 7%;
+    --secondary: 213 28% 15%;
+    --secondary-foreground: 210 24% 95%;
+    --muted: 213 28% 15%;
+    --muted-foreground: 213 16% 82%;
+    --accent: 199 76% 55%;
+    --accent-foreground: 213 38% 7%;
+    --destructive: 11 88% 58%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 213 24% 19%;
+    --input: 213 24% 19%;
+    --ring: 152 82% 42%;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  * { @apply border-border; }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "cv11", "ss01";
+  }
+  ::selection { @apply bg-primary/20; }
+}
+
+@layer utilities {
+  /* Drawing-sheet grid used behind the hero and technical panels */
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, hsl(var(--border) / 0.5) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--border) / 0.5) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+  .bg-grid-fine {
+    background-image:
+      linear-gradient(to right, hsl(var(--border) / 0.35) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--border) / 0.35) 1px, transparent 1px);
+    background-size: 12px 12px;
+  }
+  .text-balance { text-wrap: balance; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
