@@ -7,7 +7,7 @@ import { PageHero } from "@/components/page-hero";
 import { Reveal } from "@/components/reveal";
 import { ServiceExplorer } from "@/components/service-explorer";
 import { ServiceJump } from "@/components/service-jump";
-import { certifications } from "@/lib/site";
+import { certifications, services } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Services",
@@ -21,7 +21,7 @@ export default function ServicesPage() {
       <PageHero
         breadcrumb="Services"
         eyebrow="What we do"
-        title={<>Six disciplines,<br />one delivery team</>}
+        title={<>Seven disciplines,<br />one delivery team</>}
         intro="From feasibility through detailing to commissioned plant. Each discipline works to the standard your project is governed by, and to your own conventions where you have them."
         image="/media/s-structural.jpg"
       />
@@ -30,7 +30,7 @@ export default function ServicesPage() {
       <section className="border-b border-border bg-secondary/30">
         <div className="container grid gap-px bg-border py-px sm:grid-cols-2 lg:grid-cols-4">
           {[
-            { n: 6, sfx: "", l: "Engineering disciplines" },
+            { n: services.length, sfx: "", l: "Engineering disciplines" },
             { n: 14, sfx: "+", l: "Software platforms" },
             { n: 18, sfx: "+", l: "Codes and standards" },
             { n: 2, sfx: "×", l: "Independent check on every drawing" },

@@ -5,7 +5,7 @@ import { CareersClient } from "@/components/careers-client";
 import { CountUp } from "@/components/count-up";
 import { PageHero } from "@/components/page-hero";
 import { Reveal } from "@/components/reveal";
-import { benefits, jobs } from "@/lib/site";
+import { benefits, jobs, services } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Careers",
@@ -32,7 +32,7 @@ export default function CareersPage() {
           {[
             { n: jobs.length, sfx: "", l: "Open roles" },
             { n: 30, sfx: "+", l: "Engineers on the team" },
-            { n: 6, sfx: "", l: "Disciplines to grow into" },
+            { n: services.length, sfx: "", l: "Disciplines to grow into" },
             { n: 3, sfx: "", l: "Countries we deliver to" },
           ].map((s) => (
             <div key={s.l} className="group bg-background p-8 transition-colors duration-300 hover:bg-secondary/60">

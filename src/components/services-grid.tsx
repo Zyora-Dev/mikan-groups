@@ -250,7 +250,7 @@ export function ServicesGrid() {
               </span>
             </div>
             <h2 className="mt-5 text-balance font-display text-4xl font-700 uppercase leading-[1.02] md:text-5xl">
-              Six disciplines,<br />one delivery team
+              Seven disciplines,<br />one delivery team
             </h2>
           </div>
 

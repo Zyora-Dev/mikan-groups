@@ -161,17 +161,35 @@ export const services = [
     title: "Process Plant",
     image: "/media/s-process.jpg",
     summary:
-      "Piping design, stress analysis and E&I systems for process facilities and renewable energy plant.",
+      "Piping design, stress analysis and E&I systems for process and industrial facilities.",
     deliverables: ["Piping layout & isometrics", "Pipe stress analysis", "HAZOP studies", "Automation & smart systems", "Commissioning support"],
     software: ["CAESAR II", "Plant 3D", "AutoCAD Electrical"],
     standards: ["ASME B31.3", "IEC 60364", "ISO 14001"],
     accent: "bg-brand-green",
   },
+  {
+    id: "renewable-energy",
+    stages: [
+      { title: "Site & yield study", body: "Wind and solar resource assessed against site constraints, grid capacity and access for erection." },
+      { title: "Foundation & structure", body: "Turbine foundations, tracker frames and mounting structures designed to the governing wind and seismic code." },
+      { title: "Electrical & grid", body: "Array layouts, cable sizing, inverter and transformer arrangements through to the point of connection." },
+      { title: "Construction support", body: "Issued-for-construction drawings, erection sequences and technical queries answered through commissioning." },
+    ],
+    index: "07",
+    title: "Renewable Energy",
+    image: "/media/s-renewable.jpg",
+    summary:
+      "Structural and electrical engineering for solar farms, wind projects and battery storage — from foundations to grid connection.",
+    deliverables: ["Solar array & tracker layouts", "Turbine foundation design", "Mounting structure detailing", "Cable sizing & routing", "Grid connection drawings", "Battery storage arrangements"],
+    software: ["PVsyst", "STAAD.Pro", "AutoCAD Electrical", "ETAP"],
+    standards: ["IEC 61400", "IEC 62548", "IS 875", "ISO 14001"],
+    accent: "bg-brand-cyan",
+  },
 ] as const;
 
 export const stats = [
   { value: 30, suffix: "+", label: "Staff", note: "Engineers, detailers and coordinators" },
-  { value: 200, suffix: "+", label: "Projects", note: "Delivered across six disciplines" },
+  { value: 200, suffix: "+", label: "Projects", note: "Delivered across seven disciplines" },
   { value: 50, suffix: "+", label: "Clients", note: "Contractors, fabricators and owners" },
   { value: 3, suffix: "", label: "Countries", note: "India, Singapore and Ireland" },
 ] as const;
@@ -456,7 +474,7 @@ export const differentiators = [
   { icon: "ShieldCheck", title: "Independent checking", body: "A second engineer verifies every drawing against the source model and governing standard before issue." },
   { icon: "Globe2", title: "Three time zones", body: "IST delivery overlapping SGT and CET business hours, so your queries are answered the same working day." },
   { icon: "Ruler", title: "Your standards", body: "AS/NZS, AISC, BS, EN, API and IS — we work to the code your project is governed by, and to your detailing conventions." },
-  { icon: "Layers", title: "Six disciplines", body: "Consultation, BIM, structural, fabrication, offshore and process under one delivery team, not six subcontractors." },
+  { icon: "Layers", title: "Seven disciplines", body: "Consultation, BIM, structural, fabrication, offshore, process and renewables under one delivery team, not seven subcontractors." },
 ] as const;
 
 /** Open roles — based on Mikan's live job postings. Update as vacancies change. */
@@ -556,7 +574,7 @@ export const jobs = [
 
 export const benefits = [
   { icon: "GraduationCap", title: "Learn on live projects", body: "You work on real international projects from the start, with a senior engineer checking and explaining every drawing you issue." },
-  { icon: "Globe2", title: "International standards", body: "Exposure to AS/NZS, AISC, BS, EN and API codes across six disciplines — experience that travels." },
+  { icon: "Globe2", title: "International standards", body: "Exposure to AS/NZS, AISC, BS, EN, API and IEC codes across seven disciplines — experience that travels." },
   { icon: "Users", title: "Small teams, direct access", body: "No layers between you and the lead engineer. Questions get answered the same day." },
   { icon: "TrendingUp", title: "Clear progression", body: "Detailer to checker to lead. We promote from within as the practice grows across three countries." },
 ] as const;

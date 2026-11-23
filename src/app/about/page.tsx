@@ -39,7 +39,7 @@ export default function AboutPage() {
             </h1>
             <p className="mx-auto mt-7 max-w-2xl text-lg font-medium leading-[1.7] text-foreground/80">
               We produce the drawings, models and calculations that fabrication
-              shops and site teams build from — across six engineering
+              shops and site teams build from — across seven engineering
               disciplines and three countries.
             </p>
           </div>
@@ -63,7 +63,7 @@ export default function AboutPage() {
             <div className="group flex flex-col justify-between bg-brand-green p-8 text-white transition-transform duration-500 hover:-translate-y-1">
               <Layers className="size-7" />
               <div>
-                <p className="font-display text-5xl font-700 leading-none">06</p>
+                <p className="font-display text-5xl font-700 leading-none">07</p>
                 <p className="mt-3 text-base font-bold uppercase tracking-wide">
                   Engineering disciplines
                 </p>

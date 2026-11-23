@@ -6,6 +6,7 @@ import { CountUp } from "@/components/count-up";
 import { PageHero } from "@/components/page-hero";
 import { ProjectsBrowser } from "@/components/projects-browser";
 import { Reveal } from "@/components/reveal";
+import { services } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Projects",
@@ -30,7 +31,7 @@ export default function ProjectsPage() {
           {[
             { n: 200, sfx: "+", l: "Projects delivered" },
             { n: 12, sfx: "k+", l: "Drawings issued" },
-            { n: 6, sfx: "", l: "Engineering disciplines" },
+            { n: services.length, sfx: "", l: "Engineering disciplines" },
             { n: 9, sfx: "", l: "Countries served" },
           ].map((s) => (
             <div key={s.l} className="group bg-background p-8 transition-colors duration-300 hover:bg-secondary/60">
