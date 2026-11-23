@@ -52,13 +52,12 @@ def main() -> int:
             full_name="Mikan Administrator",
             role=UserRole.ADMIN,
             organisation_id=org.id,
-            must_change_password=True,
+            must_change_password=False,
             created_at=datetime.now(timezone.utc),
         )
         session.add(user)
         session.commit()
         print(f"Created admin: {email}")
-        print("Change this password on first sign-in.")
 
     return 0
 
