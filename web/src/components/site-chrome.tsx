@@ -7,7 +7,8 @@ import { SiteHeader } from "@/components/site-header";
 /** The portal runs as a standalone app — no marketing header or footer. */
 export function SiteChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const bare = pathname?.startsWith("/portal");
+  const bare =
+    pathname?.startsWith("/portal") || pathname?.startsWith("/internal");
 
   if (bare) return <>{children}</>;
 
