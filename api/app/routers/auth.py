@@ -56,12 +56,24 @@ REFRESH_PATH = "/api/v1/auth"
 
 
 def _cookie_policy() -> dict:
-    """Cross-site cookies need SameSite=None, which browsers only honour
-    with Secure. In production the site and API are on different origins
-    (Vercel and the API host), so lax would silently drop every cookie."""
-    if settings.is_production:
-        return {"secure": True, "samesite": "none"}
-    return {"secure": False, "samesite": "lax"}
+    """How auth cookies are marked, which depends on the deployment.
+
+    `secure` follows what the *browser* sees, not what this process
+    sees. Behind a TLS-terminating proxy the request arrives as plain
+    HTTP while the browser is on HTTPS, so Secure is still correct.
+
+    SameSite follows whether the site and API share an origin. Served
+    from one host they do, and lax is both sufficient and stricter.
+    Split across hosts they do not, and only None is sent at all.
+    """
+    if not settings.is_production:
+        return {"secure": False, "samesite": "lax"}
+
+    same_origin = any(
+        settings.web_base_url.rstrip("/") == o.rstrip("/")
+        for o in settings.origins
+    )
+    return {"secure": True, "samesite": "lax" if same_origin else "none"}
 
 
 def _set_auth_cookies(response: Response, user: User) -> None:

@@ -10,9 +10,13 @@
 # `sync: false` and listed in DEPLOYMENT.md.
 
 databases:
-  - name: mikan-db
-    databaseName: mikan_groups
-    user: mikan
+  # Names are deliberately specific to this application. A generic name
+  # like "mikan" or a generic user can match a Postgres instance that
+  # already exists in the account — which is how an earlier deploy came
+  # to point at the Mikan Cloud database instead of a new one.
+  - name: mikan-portal-db
+    databaseName: mikan_portal
+    user: mikan_portal
     plan: basic-256mb        # paid tiers get daily backups; free is deleted after 30 days
     region: singapore
     postgresMajorVersion: "16"
@@ -46,7 +50,7 @@ services:
         value: production
       - key: DATABASE_URL
         fromDatabase:
-          name: mikan-db
+          name: mikan-portal-db
           property: connectionString
       - key: JWT_SECRET
         generateValue: true          # Render mints a strong value once and keeps it

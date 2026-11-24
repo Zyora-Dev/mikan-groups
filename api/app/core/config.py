@@ -30,6 +30,12 @@ class Settings(BaseSettings):
     login_rate_window_seconds: int = 300
     reset_token_minutes: int = 60
 
+    # True when a proxy terminates TLS and forwards plain HTTP to this
+    # app (Cloudflare "Flexible"). The browser still sees HTTPS, so
+    # cookies must keep Secure — but the app must trust the proxy's
+    # X-Forwarded-Proto rather than the scheme it sees itself.
+    behind_tls_proxy: bool = True
+
     # Where uploaded files live. On Render this is the mount path of a
     # persistent disk; anywhere inside the code tree is wiped on deploy.
     storage_root: str = ""
