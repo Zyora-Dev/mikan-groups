@@ -29,9 +29,11 @@ Render reads `render.yaml` and creates `mikan-db`, `mikan-api` and
 Leave them blank for now — the API's URL does not exist until it has
 been created — and set them in step 3.
 
-The first build of `mikan-api` will fail its health check. That is
-expected: `WEB_BASE_URL` is still empty and the app refuses to start
-without it. Step 3 fixes that.
+The first deploy of `mikan-api` will fail to start, reporting
+`Invalid production configuration` and naming every value still
+missing. That is expected — the app refuses to serve production on
+development defaults. Database migrations still run, so the schema is
+created regardless. Step 3 fixes the rest.
 
 ## 3. Set the three manual values
 

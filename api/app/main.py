@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import SQLModel
 
-from app.core.config import get_settings
+from app.core.config import check_production_config, get_settings
 from app.core.db import engine
 from app.routers import (
     admin,
@@ -21,6 +21,9 @@ settings = get_settings()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Fail loudly at boot rather than serving a misconfigured app.
+    check_production_config(settings)
+
     # Alembic owns the schema in production; this is a convenience for local dev.
     if not settings.is_production:
         SQLModel.metadata.create_all(engine)
