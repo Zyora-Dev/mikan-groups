@@ -146,7 +146,12 @@ function Section({
       </p>
       <ul className="space-y-0.5">
         {items.map(({ href, label: text, Icon }) => {
-          const active = pathname === href || pathname?.startsWith(`${href}/`);
+          // Dashboard is the index, so it must match exactly — otherwise its
+          // prefix matches every other route under /internal/erp/team.
+          const isIndex = href === "/internal/erp/team";
+          const active = isIndex
+            ? pathname === href
+            : pathname === href || pathname?.startsWith(`${href}/`);
           return (
             <li key={href}>
               <Link href={href} aria-current={active ? "page" : undefined}

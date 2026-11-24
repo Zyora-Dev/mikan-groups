@@ -140,21 +140,17 @@ export function ProjectBoard({
 
   return (
     <section className="overflow-hidden rounded-xl border border-white/10 bg-neutral-900">
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 p-6">
-        <div>
-          <h2 className="font-display text-xl font-700 uppercase leading-tight text-white">
-            Projects
-          </h2>
-          <p className="mt-1.5 text-sm font-medium text-white/65">
-            {isClient
-              ? "Your live work, task by task."
-              : "Jobs for this client, with task progress and client verdicts."}
-          </p>
-        </div>
+      <div className="flex flex-wrap items-center justify-between gap-4 px-5 py-4">
+        <h2 className="text-sm font-bold text-white">
+          {isClient ? "Your projects" : "Projects"}
+          <span className="ml-2.5 font-display tabular-nums text-white/40">
+            {projects.length}
+          </span>
+        </h2>
         {!isClient && (
           <Button onClick={() => setNewProject(true)}
-            className="h-11 rounded-lg bg-brand-green px-5 font-semibold text-white hover:bg-brand-green/90">
-            <Plus className="mr-2.5 size-4" /> New project
+            className="h-9 rounded-lg bg-brand-green px-4 text-xs font-bold text-white hover:bg-brand-green/90">
+            <Plus className="mr-2 size-3.5" /> New project
           </Button>
         )}
       </div>
@@ -186,13 +182,16 @@ export function ProjectBoard({
               <article key={p.id}>
                 <button type="button" onClick={() => setExpanded(open ? null : p.id)}
                   aria-expanded={open}
-                  className="flex w-full flex-wrap items-center gap-5 p-5 text-left transition-colors hover:bg-white/[0.03]">
+                  className={cn(
+                    "flex w-full flex-wrap items-center gap-5 px-5 py-4 text-left transition-colors",
+                    open ? "bg-white/[0.03]" : "hover:bg-white/[0.03]"
+                  )}>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2.5">
                       <span className="font-mono text-xs font-bold text-brand-green">
                         {p.job_number}
                       </span>
-                      <h3 className="font-display text-lg font-700 uppercase leading-tight text-white">
+                      <h3 className="text-sm font-bold leading-tight text-white">
                         {p.title}
                       </h3>
                       <span className={cn("border px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide",
@@ -210,22 +209,21 @@ export function ProjectBoard({
                         </span>
                       )}
                     </div>
-                    <p className="mt-2 text-sm font-medium text-white/60">
+                    <p className="mt-1.5 text-xs font-medium text-white/45">
                       {p.done_count}/{p.task_count} tasks
                       {p.standard && ` · ${p.standard}`}
                       {p.target_date && ` · due ${formatDate(p.target_date)}`}
                     </p>
                   </div>
 
-                  <div className="w-40">
-                    <div className="flex items-center justify-between text-xs font-bold text-white/70">
-                      <span>Progress</span>
-                      <span className="tabular-nums text-white">{p.progress}%</span>
-                    </div>
-                    <div className="mt-2 h-1.5 w-full bg-white/10">
-                      <div className="h-full bg-brand-green transition-all duration-500"
+                  <div className="flex w-36 items-center gap-2.5">
+                    <div className="h-1 flex-1 rounded-full bg-white/[0.08]">
+                      <div className="h-full rounded-full bg-brand-green transition-all duration-500"
                         style={{ width: `${p.progress}%` }} />
                     </div>
+                    <span className="w-9 text-right text-xs font-bold tabular-nums text-white/60">
+                      {p.progress}%
+                    </span>
                   </div>
 
                   <ChevronDown className={cn("size-5 shrink-0 text-white/45 transition-transform",
@@ -233,7 +231,7 @@ export function ProjectBoard({
                 </button>
 
                 {open && (
-                  <div className="border-t border-white/10 bg-neutral-950/40 p-5">
+                  <div className="border-t border-white/[0.07] bg-neutral-950/50 p-5">
                     {!isClient && (
                       <div className="mb-4 flex flex-wrap items-center gap-3">
                         <Select value={p.status} onValueChange={(v) => setProjectStatus(p, v as ProjectStatus)}>
@@ -272,9 +270,9 @@ export function ProjectBoard({
                           const overdue = days !== null && days < 0 && t.status !== "done";
                           return (
                             <li key={t.id}>
-                              <div className="flex flex-wrap items-center gap-4 border border-white/10 bg-neutral-900 p-4 transition-colors hover:border-white/25">
+                              <div className="flex flex-wrap items-center gap-4 rounded-lg border border-white/[0.07] bg-neutral-950/60 p-4 transition-colors hover:border-white/20 hover:bg-neutral-950">
                                 <button type="button" onClick={() => setOpenTask(t)}
-                                  className="min-w-0 flex-1 text-left">
+                                  className="group/task min-w-0 flex-1 text-left">
                                   <div className="flex flex-wrap items-center gap-2">
                                     <span className={cn("border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide",
                                       TASK_STATUS_STYLE[t.status])}>
@@ -292,7 +290,7 @@ export function ProjectBoard({
                                       </span>
                                     )}
                                   </div>
-                                  <p className="mt-2 text-sm font-bold text-white">{t.title}</p>
+                                  <p className="mt-2 text-sm font-bold text-white transition-colors group-hover/task:text-brand-green">{t.title}</p>
                                   <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-medium">
                                     {t.due_date && (
                                       <span className={cn("flex items-center gap-1.5",
@@ -318,15 +316,14 @@ export function ProjectBoard({
                                   </div>
                                 </button>
 
-                                <div className="w-28 shrink-0">
-                                  <div className="flex items-center justify-between text-xs font-bold">
-                                    <span className="text-white/55">Progress</span>
-                                    <span className="tabular-nums text-white">{t.progress}%</span>
-                                  </div>
-                                  <div className="mt-1.5 h-1.5 w-full bg-white/10">
-                                    <div className={cn("h-full transition-all duration-500", progressTone(t.status))}
+                                <div className="flex w-28 shrink-0 items-center gap-2.5">
+                                  <div className="h-1 flex-1 rounded-full bg-white/[0.08]">
+                                    <div className={cn("h-full rounded-full transition-all duration-500", progressTone(t.status))}
                                       style={{ width: `${t.progress}%` }} />
                                   </div>
+                                  <span className="w-9 text-right text-xs font-bold tabular-nums text-white/60">
+                                    {t.progress}%
+                                  </span>
                                 </div>
 
                                 {!isClient && (
