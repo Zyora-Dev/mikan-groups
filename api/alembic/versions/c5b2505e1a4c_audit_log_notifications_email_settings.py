@@ -50,7 +50,7 @@ def upgrade() -> None:
     sa.Column('actor_id', sa.Uuid(), nullable=True),
     sa.Column('actor_name', sqlmodel.sql.sqltypes.AutoString(length=150), nullable=False),
     sa.Column('actor_is_client', sa.Boolean(), nullable=False),
-    sa.Column('action', sa.Enum('CREATED', 'UPDATED', 'DELETED', 'STATUS_CHANGED', 'SUBMITTED', 'APPROVED', 'CHANGES_REQUESTED', 'ASSIGNED', 'MEMBER_ADDED', 'MEMBER_REMOVED', 'FILE_ADDED', 'FILE_REMOVED', 'COMMENTED', 'SIGNED_IN', 'ACCESS_GRANTED', 'ACCESS_REVOKED', 'PASSWORD_RESET', name='auditaction'), nullable=False),
+    sa.Column('action', sa.Enum('CREATED', 'UPDATED', 'DELETED', 'STATUS_CHANGED', 'SUBMITTED', 'APPROVED', 'CHANGES_REQUESTED', 'ASSIGNED', 'MEMBER_ADDED', 'MEMBER_REMOVED', 'FILE_ADDED', 'FILE_REMOVED', 'COMMENTED', 'SIGNED_IN', 'ACCESS_GRANTED', 'ACCESS_REVOKED', 'PASSWORD_RESET', name='auditaction', create_type=False), nullable=False),
     sa.Column('entity_type', sqlmodel.sql.sqltypes.AutoString(length=40), nullable=False),
     sa.Column('entity_id', sa.Uuid(), nullable=True),
     sa.Column('entity_label', sqlmodel.sql.sqltypes.AutoString(length=250), nullable=False),

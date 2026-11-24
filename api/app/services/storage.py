@@ -12,7 +12,16 @@ import secrets
 from pathlib import Path
 from uuid import UUID
 
-STORAGE_ROOT = Path(__file__).resolve().parents[2] / "storage"
+from app.core.config import get_settings
+
+_configured = get_settings().storage_root
+# A deployed host mounts a disk and sets STORAGE_ROOT; locally we fall
+# back to api/storage so development needs no configuration.
+STORAGE_ROOT = (
+    Path(_configured).resolve()
+    if _configured
+    else Path(__file__).resolve().parents[2] / "storage"
+)
 
 MAX_BYTES = 50 * 1024 * 1024  # 50 MB
 

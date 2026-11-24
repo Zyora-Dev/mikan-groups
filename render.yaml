@@ -1,18 +1,99 @@
+# Render blueprint for the Mikan monorepo.
+#
+#   web  — Next.js marketing site, client portal and internal ERP
+#   api  — FastAPI service backing both portals
+#   db   — PostgreSQL
+#
+# Deploy: Render dashboard -> New -> Blueprint -> pick this repo.
+# Everything below is created in one go. Three values cannot be
+# generated and must be set by hand afterwards; they are marked
+# `sync: false` and listed in DEPLOYMENT.md.
+
+databases:
+  - name: mikan-db
+    databaseName: mikan_groups
+    user: mikan
+    plan: basic-256mb        # paid tiers get daily backups; free is deleted after 30 days
+    region: singapore
+    postgresMajorVersion: "16"
+
 services:
+  # ------------------------------------------------------------------ API
   - type: web
-    name: mikan-groups
-    runtime: node
-    plan: starter          # free tier sleeps after inactivity; starter keeps it warm
-    region: singapore      # closest to Mikan's primary market
+    name: mikan-api
+    runtime: python
+    plan: starter            # free instances sleep, which breaks portal sessions
+    region: singapore        # must match the database to avoid cross-region latency
     branch: main
+    rootDir: api
+    buildCommand: ./build.sh
+    startCommand: ./start.sh
+    healthCheckPath: /health
+    autoDeploy: true
+
+    # Uploaded drawings. Without a disk these are wiped on every deploy.
+    # A disk pins the service to one instance — fine at this size, and
+    # the reason storage.py is written to be swapped for S3 later.
+    disk:
+      name: mikan-uploads
+      mountPath: /var/data/uploads
+      sizeGB: 10
+
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.7"
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: mikan-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true          # Render mints a strong value once and keeps it
+      - key: JWT_ALGORITHM
+        value: HS256
+      # Short access tokens are workable because /auth/refresh renews
+      # them silently; the session still lasts REFRESH_TOKEN_DAYS.
+      - key: ACCESS_TOKEN_MINUTES
+        value: "60"
+      - key: REFRESH_TOKEN_DAYS
+        value: "30"
+      - key: RESET_TOKEN_MINUTES
+        value: "60"
+      - key: LOGIN_RATE_LIMIT
+        value: "20"
+      - key: LOGIN_RATE_WINDOW_SECONDS
+        value: "300"
+      - key: STORAGE_ROOT
+        value: /var/data/uploads
+      # These two must be the live site origin. The API refuses to start
+      # if WEB_BASE_URL still says localhost, and cookies are dropped if
+      # CORS_ORIGINS does not match the browser's origin exactly.
+      - key: WEB_BASE_URL
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+
+  # ------------------------------------------------------------------ web
+  - type: web
+    name: mikan-web
+    runtime: node
+    plan: starter
+    region: singapore
+    branch: main
+    rootDir: web
     buildCommand: npm ci && npm run build
     startCommand: npm run start
     healthCheckPath: /
     autoDeploy: true
     envVars:
       - key: NODE_VERSION
-        value: 22.11.0
+        value: "22.11.0"
       - key: NODE_ENV
         value: production
       - key: NEXT_TELEMETRY_DISABLED
         value: "1"
+      # Baked into the client bundle at build time, so it must be the
+      # API's public URL — not an internal address.
+      - key: NEXT_PUBLIC_API_BASE
+        sync: false

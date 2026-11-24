@@ -1,7 +1,7 @@
 """client organisation fields
 
 Revision ID: ce12ea973a4f
-Revises: 
+Revises: a0000000base
 Create Date: 2026-11-23 23:19:05.405807
 
 """
@@ -14,7 +14,7 @@ import sqlmodel
 
 # revision identifiers, used by Alembic.
 revision: str = 'ce12ea973a4f'
-down_revision: Union[str, Sequence[str], None] = None
+down_revision: Union[str, Sequence[str], None] = 'a0000000base'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -26,7 +26,7 @@ def upgrade() -> None:
     op.add_column('organisation', sa.Column('registration_no', sqlmodel.sql.sqltypes.AutoString(length=80), nullable=True))
     op.add_column('organisation', sa.Column('tax_no', sqlmodel.sql.sqltypes.AutoString(length=80), nullable=True))
     op.add_column('organisation', sa.Column('website', sqlmodel.sql.sqltypes.AutoString(length=200), nullable=True))
-    op.add_column('organisation', sa.Column('client_type', sa.Enum('MAIN_CONTRACTOR', 'FABRICATOR', 'EPC', 'DEVELOPER', 'CONSULTANCY', 'AUTHORITY', 'OTHER', name='clienttype'), nullable=False, server_default=sa.text("'OTHER'")))
+    op.add_column('organisation', sa.Column('client_type', sa.Enum('MAIN_CONTRACTOR', 'FABRICATOR', 'EPC', 'DEVELOPER', 'CONSULTANCY', 'AUTHORITY', 'OTHER', name='clienttype', create_type=False), nullable=False, server_default=sa.text("'OTHER'")))
     op.add_column('organisation', sa.Column('sector', sqlmodel.sql.sqltypes.AutoString(length=120), nullable=True))
     op.add_column('organisation', sa.Column('default_standard', sqlmodel.sql.sqltypes.AutoString(length=60), nullable=True))
     op.add_column('organisation', sa.Column('city', sqlmodel.sql.sqltypes.AutoString(length=120), nullable=True))
@@ -34,12 +34,12 @@ def upgrade() -> None:
     op.add_column('organisation', sa.Column('address_line2', sqlmodel.sql.sqltypes.AutoString(length=200), nullable=True))
     op.add_column('organisation', sa.Column('postcode', sqlmodel.sql.sqltypes.AutoString(length=30), nullable=True))
     op.add_column('organisation', sa.Column('timezone', sqlmodel.sql.sqltypes.AutoString(length=60), nullable=True))
-    op.add_column('organisation', sa.Column('contracting_entity', sa.Enum('SINGAPORE', 'IRELAND', 'INDIA', name='contractingentity'), nullable=False, server_default=sa.text("'SINGAPORE'")))
+    op.add_column('organisation', sa.Column('contracting_entity', sa.Enum('SINGAPORE', 'IRELAND', 'INDIA', name='contractingentity', create_type=False), nullable=False, server_default=sa.text("'SINGAPORE'")))
     op.add_column('organisation', sa.Column('contact_name', sqlmodel.sql.sqltypes.AutoString(length=150), nullable=True))
     op.add_column('organisation', sa.Column('contact_email', sqlmodel.sql.sqltypes.AutoString(length=254), nullable=True))
     op.add_column('organisation', sa.Column('contact_phone', sqlmodel.sql.sqltypes.AutoString(length=40), nullable=True))
     op.add_column('organisation', sa.Column('account_manager_id', sa.Uuid(), nullable=True))
-    op.add_column('organisation', sa.Column('status', sa.Enum('PROSPECT', 'ACTIVE', 'DORMANT', 'ARCHIVED', name='clientstatus'), nullable=False, server_default=sa.text("'PROSPECT'")))
+    op.add_column('organisation', sa.Column('status', sa.Enum('PROSPECT', 'ACTIVE', 'DORMANT', 'ARCHIVED', name='clientstatus', create_type=False), nullable=False, server_default=sa.text("'PROSPECT'")))
     op.add_column('organisation', sa.Column('nda_signed', sa.Boolean(), nullable=False, server_default=sa.text("false")))
     op.add_column('organisation', sa.Column('nda_signed_on', sa.Date(), nullable=True))
     op.add_column('organisation', sa.Column('onboarded_on', sa.Date(), nullable=True))

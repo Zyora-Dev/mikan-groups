@@ -26,7 +26,7 @@ def upgrade() -> None:
     sa.Column('id', sa.Uuid(), nullable=False),
     sa.Column('project_id', sa.Uuid(), nullable=False),
     sa.Column('user_id', sa.Uuid(), nullable=False),
-    sa.Column('role', sa.Enum('LEAD', 'ENGINEER', 'DETAILER', 'CHECKER', 'COORDINATOR', 'SUPPORT', name='projectrole'), nullable=False),
+    sa.Column('role', sa.Enum('LEAD', 'ENGINEER', 'DETAILER', 'CHECKER', 'COORDINATOR', 'SUPPORT', name='projectrole', create_type=False), nullable=False),
     sa.Column('note', sqlmodel.sql.sqltypes.AutoString(length=250), nullable=True),
     sa.Column('added_by_id', sa.Uuid(), nullable=True),
     sa.Column('created_at', sqlmodel.sql.sqltypes.UTCDateTime(), nullable=False),
