@@ -76,3 +76,19 @@ class AssignableOut(BaseModel):
     full_name: str
     role: UserRole
     job_title: str | None
+
+
+class MemberWorkload(BaseModel):
+    """What a team member currently owns."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    projects_led: int = 0
+    tasks_assigned: int = 0
+    tasks_checking: int = 0
+    tasks_overdue: int = 0
+    clients: list[str] = []
+
+
+class MemberDetail(TeamMemberOut):
+    workload: MemberWorkload = MemberWorkload()

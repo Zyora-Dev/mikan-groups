@@ -3,7 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import {
-  AlertCircle, Check, KeyRound, Loader2, Lock, Plus, ShieldCheck, UserPlus, X,
+  AlertCircle, Check, ChevronRight, KeyRound, Loader2, Lock, Plus, ShieldCheck,
+  UserPlus, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,12 +15,10 @@ import { Label } from "@/components/ui/label";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { ApiError, type TeamMember, api } from "@/lib/api";
+import { MemberSheet } from "@/components/member-sheet";
+import { ApiError, type Session, type TeamMember, api } from "@/lib/api";
+import { initials } from "@/lib/project-ui";
 import { cn } from "@/lib/utils";
-
-function initials(name: string) {
-  return name.split(" ").filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
-}
 
 function fmt(iso: string | null) {
   if (!iso) return "Never";
@@ -36,6 +35,8 @@ export function TeamMembers() {
   const [busy, setBusy] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -53,6 +54,7 @@ export function TeamMembers() {
 
   useEffect(() => {
     void load();
+    api.me().then(setSession).catch(() => {});
   }, [load]);
 
   async function onCreate(e: React.FormEvent<HTMLFormElement>) {
@@ -85,24 +87,7 @@ export function TeamMembers() {
     }
   }
 
-  async function toggleActive(m: TeamMember) {
-    try {
-      await api.team.update(m.id, { is_active: !m.is_active });
-      await load();
-    } catch (err) {
-      setNotice(err instanceof ApiError ? err.message : "Update failed.");
-    }
-  }
 
-  async function unlock(m: TeamMember) {
-    try {
-      await api.team.unlock(m.id);
-      setNotice(`${m.full_name} unlocked.`);
-      await load();
-    } catch {
-      setNotice("Could not unlock the account.");
-    }
-  }
 
   return (
     <div>
@@ -135,7 +120,7 @@ export function TeamMembers() {
         </div>
       )}
 
-      <div className="mt-8 border border-white/10">
+      <div className="mt-8 overflow-hidden rounded-xl border border-white/10 bg-neutral-900">
         {loading ? (
           <p className="p-10 text-center text-sm font-bold uppercase tracking-wide text-white/45">
             Loading…
@@ -146,81 +131,84 @@ export function TeamMembers() {
             <p className="mt-4 text-base font-bold text-white">No team members yet</p>
           </div>
         ) : (
-          <div className="divide-y divide-white/10">
+          <ul className="divide-y divide-white/[0.07] border-t border-white/[0.07]">
             {members.map((m) => {
               const locked = m.locked_until && new Date(m.locked_until) > new Date();
               return (
-                <div key={m.id}
-                  className={cn(
-                    "flex flex-wrap items-center gap-5 p-5 transition-colors hover:bg-white/[0.03]",
-                    !m.is_active && "opacity-55"
-                  )}>
-                  <span className="flex size-11 shrink-0 items-center justify-center border border-white/15 bg-neutral-950 font-display text-sm font-700 text-brand-green">
-                    {initials(m.full_name)}
-                  </span>
+                <li key={m.id}>
+                  <button type="button" onClick={() => setOpenId(m.id)}
+                    className={cn(
+                      "group grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 px-4 py-3.5 text-left transition-colors hover:bg-white/[0.04] sm:gap-6",
+                      !m.is_active && "opacity-55"
+                    )}>
+                    <span className={cn(
+                      "flex size-10 shrink-0 items-center justify-center rounded-lg text-xs font-bold",
+                      m.is_active ? "bg-brand-green/10 text-brand-green" : "bg-white/[0.06] text-white/45"
+                    )}>
+                      {initials(m.full_name)}
+                    </span>
 
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2.5">
-                      <p className="font-display text-lg font-700 uppercase leading-tight text-white">
-                        {m.full_name}
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="truncate text-sm font-bold text-white transition-colors group-hover:text-brand-green">
+                          {m.full_name}
+                        </span>
+                        <span className={cn(
+                          "rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide",
+                          m.role === "admin"
+                            ? "border-brand-orange/40 bg-brand-orange/10 text-brand-orange"
+                            : "border-brand-green/40 bg-brand-green/10 text-brand-green"
+                        )}>
+                          {m.role}
+                        </span>
+                        {!m.is_active && (
+                          <span className="rounded-full border border-white/20 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white/55">
+                            Blocked
+                          </span>
+                        )}
+                        {locked && (
+                          <span className="flex items-center gap-1 rounded-full border border-brand-ember/40 bg-brand-ember/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-brand-ember">
+                            <Lock className="size-3" /> Locked
+                          </span>
+                        )}
+                        {m.must_change_password && (
+                          <span className="flex items-center gap-1 rounded-full border border-white/20 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white/55">
+                            <KeyRound className="size-3" /> Pending
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-1 truncate text-xs font-medium text-white/45">
+                        {m.email}
+                        {m.job_title && ` · ${m.job_title}`}
                       </p>
-                      <span className={cn(
-                        "rounded-full border px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide",
-                        m.role === "admin"
-                          ? "border-brand-orange/40 bg-brand-orange/10 text-brand-orange"
-                          : "border-brand-green/40 bg-brand-green/10 text-brand-green"
-                      )}>
-                        {m.role}
-                      </span>
-                      {!m.is_active && (
-                        <span className="rounded-full border border-white/20 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white/60">
-                          Disabled
-                        </span>
-                      )}
-                      {locked && (
-                        <span className="flex items-center gap-1.5 rounded-full border border-brand-ember/40 bg-brand-ember/10 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-brand-ember">
-                          <Lock className="size-3" /> Locked
-                        </span>
-                      )}
-                      {m.must_change_password && (
-                        <span className="flex items-center gap-1.5 rounded-full border border-white/20 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white/60">
-                          <KeyRound className="size-3" /> Password pending
-                        </span>
-                      )}
                     </div>
-                    <p className="mt-1.5 text-sm font-medium text-white/70">
-                      {m.email}
-                      {m.job_title && <span className="text-white/45"> · {m.job_title}</span>}
-                    </p>
-                  </div>
 
-                  <div className="text-right">
-                    <p className="text-[11px] font-bold uppercase tracking-wide text-white/45">
-                      Last sign-in
-                    </p>
-                    <p className="mt-0.5 text-sm font-semibold tabular-nums text-white/80">
-                      {fmt(m.last_login_at)}
-                    </p>
-                  </div>
-
-                  <div className="flex gap-2">
-                    {locked && (
-                      <Button onClick={() => unlock(m)} variant="outline"
-                        className="h-10 rounded-lg border-white/20 bg-transparent px-3.5 text-xs font-bold text-white hover:bg-white/10">
-                        Unlock
-                      </Button>
-                    )}
-                    <Button onClick={() => toggleActive(m)} variant="outline"
-                      className="h-10 rounded-lg border-white/20 bg-transparent px-3.5 text-xs font-bold text-white hover:bg-white/10">
-                      {m.is_active ? "Disable" : "Enable"}
-                    </Button>
-                  </div>
-                </div>
+                    <div className="flex items-center gap-4">
+                      <div className="hidden text-right sm:block">
+                        <p className="text-[10px] font-bold uppercase tracking-wide text-white/35">
+                          Last sign-in
+                        </p>
+                        <p className="mt-0.5 text-xs font-semibold tabular-nums text-white/70">
+                          {fmt(m.last_login_at)}
+                        </p>
+                      </div>
+                      <ChevronRight className="size-4 text-white/25 transition-all group-hover:translate-x-0.5 group-hover:text-white/60" />
+                    </div>
+                  </button>
+                </li>
               );
             })}
-          </div>
+          </ul>
         )}
       </div>
+
+      <MemberSheet
+        memberId={openId}
+        open={openId !== null}
+        onOpenChange={(o) => !o && setOpenId(null)}
+        isSelf={openId === session?.user.id}
+        onChanged={(msg) => { if (msg) setNotice(msg); void load(); }}
+      />
 
       {/* ---------- Add member ---------- */}
       <Dialog open={addOpen} onOpenChange={setAddOpen}>

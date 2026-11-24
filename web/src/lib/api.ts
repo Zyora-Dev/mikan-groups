@@ -68,6 +68,18 @@ export interface TeamMember {
   created_at: string;
 }
 
+export interface MemberWorkload {
+  projects_led: number;
+  tasks_assigned: number;
+  tasks_checking: number;
+  tasks_overdue: number;
+  clients: string[];
+}
+
+export interface MemberDetail extends TeamMember {
+  workload: MemberWorkload;
+}
+
 export interface Assignable {
   id: string;
   full_name: string;
@@ -378,6 +390,11 @@ export const api = {
 
     /** Staff who can own or check work. Readable by any internal user. */
     assignable: () => request<Assignable[]>("/team/members/assignable"),
+
+    get: (id: string) => request<MemberDetail>(`/team/members/${id}`),
+
+    remove: (id: string) =>
+      request<void>(`/team/members/${id}`, { method: "DELETE" }),
 
     create: (body: NewTeamMember) =>
       request<TeamMember>("/team/members", {
