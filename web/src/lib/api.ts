@@ -119,6 +119,29 @@ export interface ClientDetail extends ClientSummary {
   updated_at: string;
 }
 
+export interface ClientUser {
+  id: string;
+  full_name: string;
+  email: string;
+  role: "client_admin" | "client";
+  job_title: string | null;
+  phone: string | null;
+  is_active: boolean;
+  must_change_password: boolean;
+  locked_until: string | null;
+  last_login_at: string | null;
+  created_at: string;
+}
+
+export interface NewClientUser {
+  full_name: string;
+  email: string;
+  password: string;
+  role: "client_admin" | "client";
+  job_title?: string;
+  phone?: string;
+}
+
 export interface NewClient {
   name: string;
   client_type: ClientType;
@@ -222,5 +245,35 @@ export const api = {
 
     remove: (id: string) =>
       request<void>(`/clients/${id}`, { method: "DELETE" }),
+
+    users: {
+      list: (clientId: string) =>
+        request<ClientUser[]>(`/clients/${clientId}/users`),
+
+      create: (clientId: string, body: NewClientUser) =>
+        request<ClientUser>(`/clients/${clientId}/users`, {
+          method: "POST",
+          body: JSON.stringify(body),
+        }),
+
+      update: (
+        clientId: string,
+        userId: string,
+        body: Partial<{ is_active: boolean; role: "client_admin" | "client"; full_name: string; job_title: string }>,
+      ) =>
+        request<ClientUser>(`/clients/${clientId}/users/${userId}`, {
+          method: "PATCH",
+          body: JSON.stringify(body),
+        }),
+
+      resetPassword: (clientId: string, userId: string, new_password: string) =>
+        request<void>(`/clients/${clientId}/users/${userId}/password`, {
+          method: "POST",
+          body: JSON.stringify({ new_password }),
+        }),
+
+      remove: (clientId: string, userId: string) =>
+        request<void>(`/clients/${clientId}/users/${userId}`, { method: "DELETE" }),
+    },
   },
 };

@@ -16,11 +16,18 @@ from app.core.db import get_session
 from app.core.deps import AdminUser, InternalUser
 from app.models.organisation import ClientStatus, ClientType, Organisation
 from app.models.user import User
+from app.core.security import hash_password
 from app.schemas.client import (
     ClientCreate,
     ClientDetail,
     ClientSummary,
     ClientUpdate,
+)
+from app.schemas.user import PasswordReset
+from app.schemas.client_user import (
+    ClientUserCreate,
+    ClientUserOut,
+    ClientUserUpdate,
 )
 
 router = APIRouter(prefix="/clients", tags=["clients"])
@@ -184,3 +191,128 @@ def update_client(
     session.commit()
     session.refresh(org)
     return ClientDetail.model_validate(org)
+
+
+# ---------------------------------------------------------------- portal access
+
+
+def _get_client_user(session: Session, client_id: UUID, user_id: UUID) -> User:
+    """Fetch a portal user, confirming they belong to this client."""
+    _get_client(session, client_id)  # 404s if the client doesn't exist
+    user = session.get(User, user_id)
+    if not user or user.organisation_id != client_id or user.is_internal:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Portal user not found")
+    return user
+
+
+@router.get("/{client_id}/users", response_model=list[ClientUserOut])
+def list_client_users(
+    client_id: UUID,
+    user: InternalUser,
+    session: Annotated[Session, Depends(get_session)],
+) -> list[User]:
+    _get_client(session, client_id)
+    return list(
+        session.exec(
+            select(User)
+            .where(User.organisation_id == client_id)
+            .order_by(User.created_at)  # type: ignore[arg-type]
+        ).all()
+    )
+
+
+@router.post(
+    "/{client_id}/users",
+    response_model=ClientUserOut,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_client_user(
+    client_id: UUID,
+    body: ClientUserCreate,
+    admin: AdminUser,
+    session: Annotated[Session, Depends(get_session)],
+) -> User:
+    org = _get_client(session, client_id)
+    email = body.email.lower()
+
+    if session.exec(select(User).where(User.email == email)).first():
+        raise HTTPException(
+            status.HTTP_409_CONFLICT, "An account with that email already exists"
+        )
+
+    member = User(
+        email=email,
+        hashed_password=hash_password(body.password),
+        full_name=body.full_name.strip(),
+        job_title=body.job_title,
+        phone=body.phone,
+        role=body.role,
+        organisation_id=org.id,
+        # Mikan set this password, so the client must replace it.
+        must_change_password=True,
+    )
+    session.add(member)
+
+    # First portal user means the client is live, not just a prospect.
+    if org.status is ClientStatus.PROSPECT:
+        org.status = ClientStatus.ACTIVE
+        org.updated_at = datetime.now(timezone.utc)
+        session.add(org)
+
+    session.commit()
+    session.refresh(member)
+    return member
+
+
+@router.patch("/{client_id}/users/{user_id}", response_model=ClientUserOut)
+def update_client_user(
+    client_id: UUID,
+    user_id: UUID,
+    body: ClientUserUpdate,
+    admin: AdminUser,
+    session: Annotated[Session, Depends(get_session)],
+) -> User:
+    member = _get_client_user(session, client_id, user_id)
+    for field, value in body.model_dump(exclude_unset=True).items():
+        setattr(member, field, value)
+    member.updated_at = datetime.now(timezone.utc)
+    session.add(member)
+    session.commit()
+    session.refresh(member)
+    return member
+
+
+@router.post(
+    "/{client_id}/users/{user_id}/password",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def reset_client_user_password(
+    client_id: UUID,
+    user_id: UUID,
+    body: PasswordReset,
+    admin: AdminUser,
+    session: Annotated[Session, Depends(get_session)],
+) -> None:
+    member = _get_client_user(session, client_id, user_id)
+    member.hashed_password = hash_password(body.new_password)
+    member.must_change_password = True
+    member.failed_attempts = 0
+    member.locked_until = None
+    member.updated_at = datetime.now(timezone.utc)
+    session.add(member)
+    session.commit()
+
+
+@router.delete(
+    "/{client_id}/users/{user_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def delete_client_user(
+    client_id: UUID,
+    user_id: UUID,
+    admin: AdminUser,
+    session: Annotated[Session, Depends(get_session)],
+) -> None:
+    member = _get_client_user(session, client_id, user_id)
+    session.delete(member)
+    session.commit()
