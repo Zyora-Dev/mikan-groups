@@ -68,6 +68,13 @@ export interface TeamMember {
   created_at: string;
 }
 
+export interface Assignable {
+  id: string;
+  full_name: string;
+  role: UserRole;
+  job_title: string | null;
+}
+
 export interface NewTeamMember {
   full_name: string;
   email: string;
@@ -194,6 +201,7 @@ export interface Project {
   target_date: string | null;
   completed_on: string | null;
   lead_engineer_id: string | null;
+  lead_engineer_name: string | null;
   status: ProjectStatus;
   created_at: string;
   task_count: number;
@@ -214,7 +222,9 @@ export interface Task {
   progress: number;
   due_date: string | null;
   assignee_id: string | null;
+  assignee_name: string | null;
   checker_id: string | null;
+  checker_name: string | null;
   raised_by_client: boolean;
   submitted_at: string | null;
   completed_at: string | null;
@@ -365,6 +375,9 @@ export const api = {
 
   team: {
     list: () => request<TeamMember[]>("/team/members"),
+
+    /** Staff who can own or check work. Readable by any internal user. */
+    assignable: () => request<Assignable[]>("/team/members/assignable"),
 
     create: (body: NewTeamMember) =>
       request<TeamMember>("/team/members", {

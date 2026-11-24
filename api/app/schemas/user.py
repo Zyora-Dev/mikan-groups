@@ -65,3 +65,14 @@ class TeamMemberOut(BaseModel):
     locked_until: datetime | None
     last_login_at: datetime | None
     created_at: datetime
+
+
+class AssignableOut(BaseModel):
+    """Minimal staff record for assignee and checker pickers."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    full_name: str
+    role: UserRole
+    job_title: str | None

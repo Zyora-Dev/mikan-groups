@@ -5,6 +5,7 @@ import {
   AlertCircle, CalendarDays, Download, ExternalLink, FileText, Link2,
   Loader2, MessageSquare, Paperclip, Plus, Send, ThumbsUp, Trash2, Upload, X,
 } from "lucide-react";
+import { AssigneePicker } from "@/components/assignee-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -255,13 +256,14 @@ export function TaskSheet({
             </div>
             <Meta label="Priority" value={PRIORITY_LABELS[t.priority]}
               className={PRIORITY_STYLE[t.priority]} />
+            <Meta label="Assigned to" value={t.assignee_name ?? "Unassigned"} />
             <Meta label="Submitted" value={t.submitted_at ? formatDateTime(t.submitted_at) : "—"} />
             <Meta label="Completed" value={t.completed_at ? formatDateTime(t.completed_at) : "—"} />
           </div>
 
           {/* ---- team controls ---- */}
           {!isClient && (
-            <div className="grid gap-4 border border-white/10 p-5 sm:grid-cols-2">
+            <div className="grid gap-4 rounded-xl border border-white/10 p-5 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label className="text-xs font-bold uppercase tracking-wide text-white/70">Status</Label>
                 <Select value={t.status} onValueChange={(v) => patch({ status: v })} disabled={busy}>
@@ -291,6 +293,23 @@ export function TaskSheet({
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-wide text-white/70">
+                  Assigned to
+                </Label>
+                <AssigneePicker value={t.assignee_id} disabled={busy}
+                  onChange={(id) => patch({ assignee_id: id })} />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-wide text-white/70">
+                  Checked by
+                </Label>
+                <AssigneePicker value={t.checker_id} disabled={busy}
+                  placeholder="No checker"
+                  onChange={(id) => patch({ checker_id: id })} />
               </div>
             </div>
           )}

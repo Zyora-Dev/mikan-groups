@@ -22,7 +22,7 @@ from app.models.comment import Comment
 from app.models.organisation import Organisation
 from app.models.project import Project, ProjectStatus
 from app.models.task import ClientVerdict, Task, TaskStatus
-from app.models.user import User
+from app.models.user import INTERNAL_ROLES, User
 from app.services import storage
 from app.schemas.project import ProjectCreate, ProjectOut, ProjectUpdate
 from app.schemas.task import (
@@ -59,6 +59,26 @@ def _scoped_task(session: Session, user: User, task_id: UUID) -> Task:
     if not user.is_internal and task.organisation_id != user.organisation_id:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Task not found")
     return task
+
+
+def _staff_names(session: Session) -> dict[UUID, str]:
+    return {
+        u.id: u.full_name
+        for u in session.exec(select(User).where(User.role.in_(INTERNAL_ROLES))).all()  # type: ignore[attr-defined]
+    }
+
+
+def _check_staff(session: Session, user: User, *ids: UUID | None) -> None:
+    """Assignee and checker must be active Mikan staff."""
+    for uid in ids:
+        if uid is None:
+            continue
+        staff = session.get(User, uid)
+        if not staff or staff.role not in INTERNAL_ROLES or not staff.is_active:
+            raise HTTPException(
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+                "Tasks can only be assigned to active Mikan staff",
+            )
 
 
 def _project_rollup(session: Session, project: Project) -> dict:
@@ -107,8 +127,13 @@ def list_projects(
         stmt = stmt.where(Project.status == status_filter)
 
     projects = session.exec(stmt.order_by(Project.created_at.desc())).all()  # type: ignore[attr-defined]
+    names = _staff_names(session)
     return [
-        ProjectOut.model_validate(p).model_copy(update=_project_rollup(session, p))
+        ProjectOut.model_validate(p).model_copy(
+            update=_project_rollup(session, p)
+            | {"lead_engineer_name": names.get(p.lead_engineer_id)
+               if p.lead_engineer_id else None}
+        )
         for p in projects
     ]
 
@@ -137,6 +162,8 @@ def create_project(
             f"Job number {body.job_number} is already used for this client",
         )
 
+    _check_staff(session, user, body.lead_engineer_id)
+
     project = Project(
         organisation_id=client_id,
         created_by_id=user.id,
@@ -145,8 +172,11 @@ def create_project(
     session.add(project)
     session.commit()
     session.refresh(project)
+    names = _staff_names(session)
     return ProjectOut.model_validate(project).model_copy(
         update=_project_rollup(session, project)
+        | {"lead_engineer_name": names.get(project.lead_engineer_id)
+           if project.lead_engineer_id else None}
     )
 
 
@@ -157,8 +187,11 @@ def get_project(
     session: Annotated[Session, Depends(get_session)],
 ) -> ProjectOut:
     project = _scoped_project(session, user, project_id)
+    names = _staff_names(session)
     return ProjectOut.model_validate(project).model_copy(
         update=_project_rollup(session, project)
+        | {"lead_engineer_name": names.get(project.lead_engineer_id)
+           if project.lead_engineer_id else None}
     )
 
 
@@ -171,6 +204,8 @@ def update_project(
 ) -> ProjectOut:
     project = _scoped_project(session, user, project_id)
     data = body.model_dump(exclude_unset=True)
+    if "lead_engineer_id" in data:
+        _check_staff(session, user, data["lead_engineer_id"])
 
     if data.get("status") is ProjectStatus.COMPLETED and not project.completed_on:
         data["completed_on"] = date.today()
@@ -184,8 +219,11 @@ def update_project(
     session.add(project)
     session.commit()
     session.refresh(project)
+    names = _staff_names(session)
     return ProjectOut.model_validate(project).model_copy(
         update=_project_rollup(session, project)
+        | {"lead_engineer_name": names.get(project.lead_engineer_id)
+           if project.lead_engineer_id else None}
     )
 
 
@@ -236,10 +274,13 @@ def list_tasks(
         select(Task).where(Task.project_id == project_id).order_by(Task.created_at)  # type: ignore[arg-type]
     ).all()
     comments, files = _task_counts(session, [t.id for t in tasks])
+    names = _staff_names(session)
     return [
         TaskOut.model_validate(t).model_copy(update={
             "comment_count": comments.get(t.id, 0),
             "attachment_count": files.get(t.id, 0),
+            "assignee_name": names.get(t.assignee_id) if t.assignee_id else None,
+            "checker_name": names.get(t.checker_id) if t.checker_id else None,
         })
         for t in tasks
     ]
@@ -255,6 +296,8 @@ def create_task(
 ) -> Task:
     project = _scoped_project(session, user, project_id)
     from_client = not user.is_internal
+    if not from_client:
+        _check_staff(session, user, body.assignee_id, body.checker_id)
 
     task = Task(
         project_id=project.id,
@@ -281,6 +324,8 @@ def update_task(
     task = _scoped_task(session, user, task_id)
     data = body.model_dump(exclude_unset=True)
     now = datetime.now(timezone.utc)
+    if "assignee_id" in data or "checker_id" in data:
+        _check_staff(session, user, data.get("assignee_id"), data.get("checker_id"))
 
     new_status = data.get("status")
     if new_status is TaskStatus.SUBMITTED and task.status is not TaskStatus.SUBMITTED:

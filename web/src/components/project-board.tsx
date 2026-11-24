@@ -6,6 +6,7 @@ import {
   AlertCircle, CalendarDays, ChevronDown, Clock, FolderOpen, Loader2,
   MessageSquare, Paperclip, Plus, Trash2,
 } from "lucide-react";
+import { AssigneeChip, AssigneePicker } from "@/components/assignee-picker";
 import { Button } from "@/components/ui/button";
 import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
@@ -42,6 +43,9 @@ export function ProjectBoard({
   const [newProject, setNewProject] = useState(false);
   const [newTaskFor, setNewTaskFor] = useState<string | null>(null);
   const [openTask, setOpenTask] = useState<Task | null>(null);
+  const [formAssignee, setFormAssignee] = useState<string | null>(null);
+  const [formChecker, setFormChecker] = useState<string | null>(null);
+  const [formLead, setFormLead] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -95,8 +99,10 @@ export function ProjectBoard({
         standard: String(fd.get("standard") ?? "").trim() || undefined,
         target_date: String(fd.get("target_date") ?? "") || undefined,
         description: String(fd.get("description") ?? "").trim() || undefined,
+        lead_engineer_id: formLead ?? undefined,
       });
       setNewProject(false);
+      setFormLead(null);
       setExpanded(created.id);
       await load();
     } catch (err) {
@@ -117,8 +123,12 @@ export function ProjectBoard({
         description: String(fd.get("description") ?? "").trim() || undefined,
         due_date: String(fd.get("due_date") ?? "") || undefined,
         priority: String(fd.get("priority") ?? "normal"),
+        assignee_id: formAssignee ?? undefined,
+        checker_id: formChecker ?? undefined,
       });
       setNewTaskFor(null);
+      setFormAssignee(null);
+      setFormChecker(null);
       await refresh();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not create the task.");
@@ -225,10 +235,11 @@ export function ProjectBoard({
                         </span>
                       )}
                     </div>
-                    <p className="mt-1.5 text-xs font-medium text-white/45">
-                      {p.done_count}/{p.task_count} tasks
-                      {p.standard && ` · ${p.standard}`}
-                    </p>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-medium text-white/45">
+                      <span>{p.done_count}/{p.task_count} tasks</span>
+                      {p.standard && <span>{p.standard}</span>}
+                      {!isClient && <AssigneeChip name={p.lead_engineer_name} role="Lead engineer" />}
+                    </div>
                   </div>
 
                   <div className="flex w-36 items-center gap-2.5">
@@ -317,6 +328,9 @@ export function ProjectBoard({
                                     <span className={PRIORITY_STYLE[t.priority]}>
                                       {PRIORITY_LABELS[t.priority]}
                                     </span>
+                                    {!isClient && (
+                                      <AssigneeChip name={t.assignee_name} />
+                                    )}
                                     {t.comment_count > 0 && (
                                       <span className="flex items-center gap-1.5 text-white/55">
                                         <MessageSquare className="size-3" /> {t.comment_count}
@@ -379,7 +393,16 @@ export function ProjectBoard({
               <Fld id="standard" label="Standard" placeholder="AS/NZS 5131" />
             </div>
             <Fld id="title" label="Title" required placeholder="Warehouse steel package" />
-            <Fld id="target_date" label="Target date" type="date" />
+            <div className="grid gap-5 sm:grid-cols-2">
+              <Fld id="target_date" label="Target date" type="date" />
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-wide text-white/80">
+                  Lead engineer
+                </Label>
+                <AssigneePicker value={formLead} onChange={setFormLead}
+                  placeholder="Not assigned" />
+              </div>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="description" className="text-xs font-bold uppercase tracking-wide text-white/80">
                 Description
@@ -444,6 +467,24 @@ export function ProjectBoard({
                 </Select>
               </div>
             </div>
+            {!isClient && (
+              <div className="grid gap-5 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold uppercase tracking-wide text-white/80">
+                    Assign to
+                  </Label>
+                  <AssigneePicker value={formAssignee} onChange={setFormAssignee} />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold uppercase tracking-wide text-white/80">
+                    Checker
+                  </Label>
+                  <AssigneePicker value={formChecker} onChange={setFormChecker}
+                    placeholder="No checker" />
+                </div>
+              </div>
+            )}
+
             <div className="flex gap-3 pt-1">
               <Button type="submit" disabled={busy}
                 className="h-12 flex-1 rounded-lg bg-brand-green font-semibold text-white hover:bg-brand-green/90">

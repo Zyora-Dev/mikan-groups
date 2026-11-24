@@ -12,10 +12,11 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, func, select
 
 from app.core.db import get_session
-from app.core.deps import AdminUser
+from app.core.deps import AdminUser, InternalUser
 from app.core.security import hash_password
 from app.models.user import INTERNAL_ROLES, User, UserRole
 from app.schemas.user import (
+    AssignableOut,
     PasswordReset,
     TeamMemberOut,
     UserCreate,
@@ -63,6 +64,29 @@ def list_members(
                 User.role.in_(INTERNAL_ROLES),  # type: ignore[attr-defined]
             )
             .order_by(User.created_at.desc())  # type: ignore[attr-defined]
+        ).all()
+    )
+
+
+@router.get("/assignable", response_model=list[AssignableOut])
+def list_assignable(
+    user: InternalUser,
+    session: Annotated[Session, Depends(get_session)],
+) -> list[User]:
+    """Active staff who can own or check work.
+
+    Any internal user may read this — engineers need it to populate an
+    assignee picker — unlike the full member list, which is admin-only.
+    """
+    return list(
+        session.exec(
+            select(User)
+            .where(
+                User.organisation_id == user.organisation_id,
+                User.role.in_(INTERNAL_ROLES),  # type: ignore[attr-defined]
+                User.is_active == True,  # noqa: E712
+            )
+            .order_by(User.full_name)  # type: ignore[arg-type]
         ).all()
     )
 

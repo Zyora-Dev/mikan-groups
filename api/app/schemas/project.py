@@ -43,6 +43,7 @@ class ProjectOut(BaseModel):
     target_date: date | None
     completed_on: date | None
     lead_engineer_id: UUID | None
+    lead_engineer_name: str | None = None
     status: ProjectStatus
     created_at: datetime
 

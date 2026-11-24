@@ -47,7 +47,9 @@ class TaskOut(BaseModel):
     progress: int
     due_date: date | None
     assignee_id: UUID | None
+    assignee_name: str | None = None
     checker_id: UUID | None
+    checker_name: str | None = None
     raised_by_client: bool
     submitted_at: datetime | None
     completed_at: datetime | None
