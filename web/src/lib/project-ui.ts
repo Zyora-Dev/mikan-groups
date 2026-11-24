@@ -71,3 +71,37 @@ export function daysUntil(iso: string | null): number | null {
   today.setHours(0, 0, 0, 0);
   return Math.round((due.getTime() - today.getTime()) / 86_400_000);
 }
+
+
+/** Greeting that changes through the working day. */
+export function greeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 17) return "Good afternoon";
+  return "Good evening";
+}
+
+export function today(): string {
+  return new Date().toLocaleDateString("en-GB", {
+    weekday: "long", day: "numeric", month: "long",
+  });
+}
+
+/** Relative time, for activity feeds where exact minutes rarely matter. */
+export function relativeTime(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.round(diff / 60_000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.round(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.round(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return formatDate(iso);
+}
+
+/** First letters of a name, for compact avatars. */
+export function initials(name: string): string {
+  return name.split(" ").filter(Boolean).slice(0, 2)
+    .map((w) => w[0]).join("").toUpperCase();
+}
