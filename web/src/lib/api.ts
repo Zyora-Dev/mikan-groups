@@ -27,18 +27,55 @@ export interface Session {
   organisation: SessionOrg;
 }
 
+export interface ResetTokenCheck {
+  valid: boolean;
+  email: string | null;
+  full_name: string | null;
+  scope: "portal" | "team";
+}
+
 export class ApiError extends Error {
   constructor(message: string, readonly status: number) {
     super(message);
   }
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
+/** Routes that must never trigger a renewal attempt — a 401 from any of
+ *  these is the answer, not a stale token, and retrying would loop. */
+const NO_RETRY = ["/auth/login", "/auth/logout", "/auth/refresh"];
+
+/** One renewal in flight at a time, so a page issuing six parallel calls
+ *  does not fire six refreshes. */
+let renewing: Promise<boolean> | null = null;
+
+async function renew(): Promise<boolean> {
+  renewing ??= fetch(`${API_BASE}/auth/refresh`, {
+    method: "POST",
+    credentials: "include",
+  })
+    .then((r) => r.ok)
+    .catch(() => false)
+    .finally(() => { renewing = null; });
+  return renewing;
+}
+
+async function send(path: string, init?: RequestInit): Promise<Response> {
+  return fetch(`${API_BASE}${path}`, {
     ...init,
     credentials: "include", // auth cookies are httpOnly
     headers: { "Content-Type": "application/json", ...init?.headers },
   });
+}
+
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  let res = await send(path, init);
+
+  // An expired access token is recoverable: renew once and replay. If the
+  // refresh cookie is gone or the account was disabled, the retry fails
+  // the same way and the caller handles it as a normal 401.
+  if (res.status === 401 && !NO_RETRY.some((p) => path.startsWith(p))) {
+    if (await renew()) res = await send(path, init);
+  }
 
   if (!res.ok) {
     let detail = "Something went wrong. Please try again.";
@@ -525,7 +562,27 @@ export const api = {
 
   logout: () => request<void>("/auth/logout", { method: "POST" }),
 
+  /** Exchange the refresh cookie for a fresh access token. */
+  refresh: () => request<Session>("/auth/refresh", { method: "POST" }),
+
   me: () => request<Session>("/auth/me"),
+
+  forgotPassword: (email: string, scope: "portal" | "team" = "portal") =>
+    request<{ detail: string }>("/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ email, scope }),
+    }),
+
+  checkResetToken: (token: string) =>
+    request<ResetTokenCheck>(
+      `/auth/reset-password?token=${encodeURIComponent(token)}`,
+    ),
+
+  resetPassword: (token: string, new_password: string) =>
+    request<void>("/auth/reset-password", {
+      method: "POST",
+      body: JSON.stringify({ token, new_password }),
+    }),
 
   dashboard: () => request<Dashboard>("/dashboard"),
 
@@ -741,11 +798,15 @@ export const api = {
         }),
       /** Multipart upload — bypasses the JSON request helper. */
       upload: async (taskId: string, form: FormData) => {
-        const res = await fetch(`${API_BASE}/tasks/${taskId}/files`, {
+        const post = () => fetch(`${API_BASE}/tasks/${taskId}/files`, {
           method: "POST",
           credentials: "include",
           body: form,
         });
+        let res = await post();
+        // Same renewal as the JSON helper — an upload is often the first
+        // call after a long idle spell, so it is the likeliest to expire.
+        if (res.status === 401 && (await renew())) res = await post();
         if (!res.ok) {
           let detail = "Upload failed.";
           try {

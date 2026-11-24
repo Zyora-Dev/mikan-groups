@@ -123,7 +123,7 @@ export function PortalLogin() {
                   <Label htmlFor="password" className="text-sm font-bold uppercase tracking-wide text-foreground">
                     Password <span className="text-brand-green">*</span>
                   </Label>
-                  <Link href="/contact" className="text-sm font-bold text-brand-green underline-offset-4 hover:underline">
+                  <Link href="/portal/forgot-password" className="text-sm font-bold text-brand-green underline-offset-4 hover:underline">
                     Forgot password?
                   </Link>
                 </div>

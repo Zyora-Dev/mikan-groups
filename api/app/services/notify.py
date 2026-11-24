@@ -14,6 +14,7 @@ from uuid import UUID
 from sqlmodel import Session, select
 
 from app.models.membership import ProjectMember
+from app.core.config import get_settings
 from app.models.organisation import Organisation
 from app.models.project import Project
 from app.models.settings import EmailSettings, Notification
@@ -21,7 +22,7 @@ from app.models.task import Task
 from app.models.user import INTERNAL_ROLES, User
 from app.services import email as email_service
 
-WEB_BASE = "http://localhost:5188"
+WEB_BASE = get_settings().web_base_url
 
 
 def _config(session: Session) -> EmailSettings:

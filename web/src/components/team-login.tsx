@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ArrowRight, Eye, EyeOff, Loader2, Lock, Mail, ShieldAlert } from "lucide-react";
@@ -97,9 +98,15 @@ export function TeamLogin() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-xs font-bold uppercase tracking-wide text-white/80">
-                Password
-              </Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password" className="text-xs font-bold uppercase tracking-wide text-white/80">
+                  Password
+                </Label>
+                <Link href="/internal/erp/team/forgot-password"
+                  className="text-xs font-bold text-brand-green underline-offset-4 hover:underline">
+                  Forgot password?
+                </Link>
+              </div>
               <div className="relative">
                 <Lock className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-white/40" />
                 <Input id="password" name="password" autoComplete="current-password"
