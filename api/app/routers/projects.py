@@ -9,7 +9,10 @@ from datetime import date, datetime, timezone
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import (
+    APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status,
+)
+from fastapi.responses import FileResponse
 from sqlmodel import Session, func, select
 
 from app.core.db import get_session
@@ -20,6 +23,7 @@ from app.models.organisation import Organisation
 from app.models.project import Project, ProjectStatus
 from app.models.task import ClientVerdict, Task, TaskStatus
 from app.models.user import User
+from app.services import storage
 from app.schemas.project import ProjectCreate, ProjectOut, ProjectUpdate
 from app.schemas.task import (
     AttachmentCreate,
@@ -404,6 +408,84 @@ def add_attachment(
     return item
 
 
+@router.post("/tasks/{task_id}/files", response_model=AttachmentOut,
+             status_code=status.HTTP_201_CREATED)
+async def upload_file(
+    task_id: UUID,
+    user: CurrentUser,
+    session: Annotated[Session, Depends(get_session)],
+    file: Annotated[UploadFile, File()],
+    label: Annotated[str | None, Form()] = None,
+    kind: Annotated[str, Form()] = "drawing",
+    revision: Annotated[str | None, Form()] = None,
+) -> Attachment:
+    """Upload a file against a task. Stored on disk, not in the database."""
+    task = _scoped_task(session, user, task_id)
+
+    raw_name = file.filename or "file"
+    suffix = ("." + raw_name.rsplit(".", 1)[-1].lower()) if "." in raw_name else ""
+    if suffix not in storage.ALLOWED_SUFFIXES:
+        allowed = ", ".join(sorted(s.lstrip(".") for s in storage.ALLOWED_SUFFIXES))
+        raise HTTPException(
+            status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            f"That file type isn't accepted. Allowed: {allowed}.",
+        )
+
+    data = await file.read()
+    if len(data) > storage.MAX_BYTES:
+        raise HTTPException(
+            status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            f"File is larger than {storage.MAX_BYTES // (1024 * 1024)}MB. "
+            "Upload it to Mikan Cloud and paste the link instead.",
+        )
+    if not data:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "That file is empty")
+
+    stored = storage.save(task.organisation_id, task.id, raw_name, data)
+
+    item = Attachment(
+        task_id=task.id,
+        organisation_id=task.organisation_id,
+        label=(label or raw_name).strip()[:250],
+        stored_path=stored,
+        filename=storage.safe_name(raw_name),
+        size_bytes=len(data),
+        content_type=file.content_type,
+        kind=kind,  # type: ignore[arg-type]
+        revision=revision,
+        uploaded_by_id=user.id,
+        from_client=not user.is_internal,
+    )
+    session.add(item)
+    session.commit()
+    session.refresh(item)
+    return item
+
+
+@router.get("/attachments/{attachment_id}/download")
+def download_attachment(
+    attachment_id: UUID,
+    user: CurrentUser,
+    session: Annotated[Session, Depends(get_session)],
+) -> FileResponse:
+    item = session.get(Attachment, attachment_id)
+    if not item or not item.stored_path:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "File not found")
+    # Clients may only download files on their own tasks.
+    if not user.is_internal and item.organisation_id != user.organisation_id:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "File not found")
+
+    path = storage.resolve(item.stored_path)
+    if not path:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "File is no longer on disk")
+
+    return FileResponse(
+        path,
+        filename=item.filename or "download",
+        media_type=item.content_type or "application/octet-stream",
+    )
+
+
 @router.delete("/attachments/{attachment_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_attachment(
     attachment_id: UUID,
@@ -418,6 +500,8 @@ def delete_attachment(
     # A client may only remove what they uploaded.
     if not user.is_internal and item.uploaded_by_id != user.id:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "You can only remove your own files")
+    if item.stored_path:
+        storage.remove(item.stored_path)
     session.delete(item)
     session.commit()
 

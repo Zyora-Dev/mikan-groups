@@ -223,7 +223,7 @@ export function ClientList() {
                       <span className="truncate text-sm font-bold text-white transition-colors group-hover:text-brand-green">
                         {c.name}
                       </span>
-                      <span className={cn("rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide",
+                      <span className={cn("rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide",
                         STATUS_STYLE[c.status])}>
                         {c.status}
                       </span>

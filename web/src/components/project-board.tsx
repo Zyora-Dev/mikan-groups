@@ -22,8 +22,8 @@ import {
   VERDICT_LABELS, api,
 } from "@/lib/api";
 import {
-  daysUntil, formatDate, PRIORITY_STYLE, progressTone, PROJECT_STATUS_STYLE,
-  TASK_STATUS_STYLE, VERDICT_STYLE,
+  DUE_TONE, dueChip, formatDate, PRIORITY_STYLE, progressTone,
+  PROJECT_STATUS_STYLE, TASK_STATUS_STYLE, VERDICT_STYLE,
 } from "@/lib/project-ui";
 import { cn } from "@/lib/utils";
 
@@ -194,17 +194,17 @@ export function ProjectBoard({
                       <h3 className="text-sm font-bold leading-tight text-white">
                         {p.title}
                       </h3>
-                      <span className={cn("border px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide",
+                      <span className={cn("rounded-full border px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide",
                         PROJECT_STATUS_STYLE[p.status])}>
                         {PROJECT_STATUS_LABELS[p.status]}
                       </span>
                       {p.overdue_count > 0 && (
-                        <span className="flex items-center gap-1 border border-brand-ember/40 bg-brand-ember/10 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-brand-ember">
+                        <span className="flex items-center gap-1 rounded-full border border-brand-ember/40 bg-brand-ember/10 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-brand-ember">
                           <Clock className="size-3" /> {p.overdue_count} overdue
                         </span>
                       )}
                       {p.awaiting_client > 0 && (
-                        <span className="border border-brand-orange/40 bg-brand-orange/10 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-brand-orange">
+                        <span className="rounded-full border border-brand-orange/40 bg-brand-orange/10 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-brand-orange">
                           {p.awaiting_client} awaiting {isClient ? "you" : "client"}
                         </span>
                       )}
@@ -266,26 +266,25 @@ export function ProjectBoard({
                     ) : (
                       <ul className="space-y-2.5">
                         {list.map((t) => {
-                          const days = daysUntil(t.due_date);
-                          const overdue = days !== null && days < 0 && t.status !== "done";
+                          const due = dueChip(t.due_date, t.status === "done");
                           return (
                             <li key={t.id}>
                               <div className="flex flex-wrap items-center gap-4 rounded-lg border border-white/[0.07] bg-neutral-950/60 p-4 transition-colors hover:border-white/20 hover:bg-neutral-950">
                                 <button type="button" onClick={() => setOpenTask(t)}
                                   className="group/task min-w-0 flex-1 text-left">
                                   <div className="flex flex-wrap items-center gap-2">
-                                    <span className={cn("border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide",
+                                    <span className={cn("rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide",
                                       TASK_STATUS_STYLE[t.status])}>
                                       {TASK_STATUS_LABELS[t.status]}
                                     </span>
                                     {t.verdict !== "none" && (
-                                      <span className={cn("border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide",
+                                      <span className={cn("rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide",
                                         VERDICT_STYLE[t.verdict])}>
                                         {VERDICT_LABELS[t.verdict]}
                                       </span>
                                     )}
                                     {t.raised_by_client && (
-                                      <span className="border border-white/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white/55">
+                                      <span className="rounded-full border border-white/20 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white/55">
                                         Request
                                       </span>
                                     )}
@@ -293,11 +292,11 @@ export function ProjectBoard({
                                   <p className="mt-2 text-sm font-bold text-white transition-colors group-hover/task:text-brand-green">{t.title}</p>
                                   <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-medium">
                                     {t.due_date && (
-                                      <span className={cn("flex items-center gap-1.5",
-                                        overdue ? "text-brand-ember" : "text-white/55")}>
-                                        <CalendarDays className="size-3" />
-                                        {formatDate(t.due_date)}
-                                        {overdue && ` · ${Math.abs(days!)}d late`}
+                                      <span className={cn(
+                                        "flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-bold",
+                                        DUE_TONE[due.tone]
+                                      )}>
+                                        <CalendarDays className="size-3" /> {due.label}
                                       </span>
                                     )}
                                     <span className={PRIORITY_STYLE[t.priority]}>

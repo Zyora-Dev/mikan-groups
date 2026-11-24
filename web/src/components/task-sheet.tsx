@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import {
-  AlertCircle, CalendarDays, ExternalLink, FileText, Loader2,
-  MessageSquare, Paperclip, Plus, Send, ThumbsUp, Trash2, X,
+  AlertCircle, CalendarDays, Download, ExternalLink, FileText, Link2,
+  Loader2, MessageSquare, Paperclip, Plus, Send, ThumbsUp, Trash2, Upload, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,8 +19,8 @@ import {
   type TaskPriority, type TaskStatus, VERDICT_LABELS, api,
 } from "@/lib/api";
 import {
-  formatDate, formatDateTime, KIND_STYLE, PRIORITY_STYLE, progressTone,
-  TASK_STATUS_STYLE, VERDICT_STYLE,
+  DUE_TONE, dueChip, fileSize, formatDate, formatDateTime, KIND_STYLE,
+  PRIORITY_STYLE, progressTone, TASK_STATUS_STYLE, VERDICT_STYLE,
 } from "@/lib/project-ui";
 import { cn } from "@/lib/utils";
 
@@ -43,6 +43,8 @@ export function TaskSheet({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [addFile, setAddFile] = useState(false);
+  const [addMode, setAddMode] = useState<"upload" | "link">("upload");
+  const [picked, setPicked] = useState<File | null>(null);
   const [verdictNote, setVerdictNote] = useState("");
   const [showVerdict, setShowVerdict] = useState<"approved" | "changes_requested" | null>(null);
 
@@ -132,6 +134,32 @@ export function TaskSheet({
     }
   }
 
+  async function uploadFile(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!picked) { setError("Choose a file first."); return; }
+    const fd = new FormData(e.currentTarget);
+    const form = new FormData();
+    form.append("file", picked);
+    form.append("label", String(fd.get("label") ?? "").trim() || picked.name);
+    form.append("kind", String(fd.get("kind") ?? "drawing"));
+    const rev = String(fd.get("revision") ?? "").trim();
+    if (rev) form.append("revision", rev);
+
+    setBusy(true);
+    setError(null);
+    try {
+      const created = await api.tasks.attachments.upload(t.id, form);
+      setFiles((f) => [created, ...f]);
+      setAddFile(false);
+      setPicked(null);
+      onChanged();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not upload the file.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function removeFile(id: string) {
     try {
       await api.tasks.attachments.remove(id);
@@ -151,18 +179,18 @@ export function TaskSheet({
         <div className="space-y-6 p-6">
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <span className={cn("border px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide",
+              <span className={cn("rounded-full border px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide",
                 TASK_STATUS_STYLE[t.status])}>
                 {TASK_STATUS_LABELS[t.status]}
               </span>
               {t.verdict !== "none" && (
-                <span className={cn("border px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide",
+                <span className={cn("rounded-full border px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide",
                   VERDICT_STYLE[t.verdict])}>
                   {VERDICT_LABELS[t.verdict]}
                 </span>
               )}
               {t.raised_by_client && (
-                <span className="border border-white/20 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white/60">
+                <span className="rounded-full border border-white/20 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white/60">
                   Client request
                 </span>
               )}
@@ -214,7 +242,17 @@ export function TaskSheet({
 
           {/* ---- meta ---- */}
           <div className="grid gap-px bg-white/10 sm:grid-cols-2">
-            <Meta label="Due" value={formatDate(t.due_date)} Icon={CalendarDays} />
+            <div className="bg-neutral-900 p-4">
+              <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-white/50">
+                <CalendarDays className="size-3" /> Due
+              </p>
+              <span className={cn(
+                "mt-1.5 inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-bold",
+                DUE_TONE[dueChip(t.due_date, t.status === "done").tone]
+              )}>
+                {dueChip(t.due_date, t.status === "done").label}
+              </span>
+            </div>
             <Meta label="Priority" value={PRIORITY_LABELS[t.priority]}
               className={PRIORITY_STYLE[t.priority]} />
             <Meta label="Submitted" value={t.submitted_at ? formatDateTime(t.submitted_at) : "—"} />
@@ -318,41 +356,118 @@ export function TaskSheet({
             </div>
 
             {addFile && (
-              <form onSubmit={attach} className="space-y-3 border-b border-white/10 bg-neutral-950/50 p-4">
-                <Input name="label" required placeholder="A-101 Rev C"
-                  className="h-11 rounded-lg border-white/15 bg-neutral-950 text-sm font-medium text-white" />
-                <Input name="url" required type="url" placeholder="https://cloud.mikan-groups.com/…"
-                  className="h-11 rounded-lg border-white/15 bg-neutral-950 text-sm font-medium text-white" />
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <Select name="kind" defaultValue={isClient ? "markup" : "drawing"}>
-                    <SelectTrigger className="h-11 rounded-lg border-white/15 bg-neutral-950 text-sm font-medium text-white">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-lg">
-                      {(Object.keys(ATTACHMENT_KIND_LABELS) as AttachmentKind[]).map((k) => (
-                        <SelectItem key={k} value={k} >
-                          {ATTACHMENT_KIND_LABELS[k]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Input name="revision" placeholder="Rev C"
-                    className="h-11 rounded-lg border-white/15 bg-neutral-950 text-sm font-medium text-white" />
+              <div className="border-b border-white/10 bg-neutral-950/50">
+                {/* upload or paste a link — both reach the same list */}
+                <div className="flex gap-1 p-3 pb-0">
+                  {([
+                    { id: "upload" as const, label: "Upload file", Icon: Upload },
+                    { id: "link" as const, label: "Paste link", Icon: Link2 },
+                  ]).map(({ id, label, Icon }) => (
+                    <button key={id} type="button" onClick={() => setAddMode(id)}
+                      aria-pressed={addMode === id}
+                      className={cn(
+                        "flex items-center gap-2 rounded-lg px-3.5 py-2 text-xs font-bold transition-colors",
+                        addMode === id
+                          ? "bg-white/10 text-white"
+                          : "text-white/50 hover:bg-white/[0.05] hover:text-white"
+                      )}>
+                      <Icon className="size-3.5" /> {label}
+                    </button>
+                  ))}
                 </div>
-                <div className="flex gap-2.5">
-                  <Button type="submit" disabled={busy}
-                    className="h-10 rounded-lg bg-brand-green px-5 text-xs font-bold text-white hover:bg-brand-green/90">
-                    Add
-                  </Button>
-                  <Button type="button" variant="outline" onClick={() => setAddFile(false)}
-                    className="h-10 rounded-lg border-white/20 bg-transparent px-5 text-xs font-bold text-white hover:bg-white/10">
-                    Cancel
-                  </Button>
-                </div>
-                <p className="text-xs font-medium text-white/45">
-                  Paste a Mikan Cloud link — the file stays where it is.
-                </p>
-              </form>
+
+                {addMode === "upload" ? (
+                  <form onSubmit={uploadFile} className="space-y-3 p-4">
+                    <label className={cn(
+                      "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed px-4 py-7 text-center transition-colors",
+                      picked ? "border-brand-green/40 bg-brand-green/[0.06]" : "border-white/15 hover:border-white/30"
+                    )}>
+                      <input type="file" className="sr-only"
+                        onChange={(e) => { setPicked(e.target.files?.[0] ?? null); setError(null); }}
+                        accept=".pdf,.dwg,.dxf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.zip,.rvt,.ifc,.nwd,.nwc" />
+                      {picked ? (
+                        <>
+                          <FileText className="size-6 text-brand-green" />
+                          <span className="text-sm font-bold text-white">{picked.name}</span>
+                          <span className="text-xs font-medium text-white/55">
+                            {fileSize(picked.size)} · click to change
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="size-6 text-white/35" />
+                          <span className="text-sm font-bold text-white">Choose a file</span>
+                          <span className="text-xs font-medium text-white/45">
+                            PDF, DWG, Revit, Navisworks and more · up to 50MB
+                          </span>
+                        </>
+                      )}
+                    </label>
+
+                    <Input name="label" placeholder="Label (defaults to the file name)"
+                      className="h-11 rounded-lg border-white/15 bg-neutral-950 text-sm font-medium text-white placeholder:text-white/30" />
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <Select name="kind" defaultValue={isClient ? "markup" : "drawing"}>
+                        <SelectTrigger className="h-11 rounded-lg border-white/15 bg-neutral-950 text-sm font-medium text-white">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-lg">
+                          {(Object.keys(ATTACHMENT_KIND_LABELS) as AttachmentKind[]).map((k) => (
+                            <SelectItem key={k} value={k}>{ATTACHMENT_KIND_LABELS[k]}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Input name="revision" placeholder="Rev C"
+                        className="h-11 rounded-lg border-white/15 bg-neutral-950 text-sm font-medium text-white placeholder:text-white/30" />
+                    </div>
+                    <div className="flex gap-2.5">
+                      <Button type="submit" disabled={busy || !picked}
+                        className="h-10 rounded-lg bg-brand-green px-5 text-xs font-bold text-white hover:bg-brand-green/90 disabled:opacity-50">
+                        {busy ? <Loader2 className="size-4 animate-spin" /> : "Upload"}
+                      </Button>
+                      <Button type="button" variant="outline"
+                        onClick={() => { setAddFile(false); setPicked(null); }}
+                        className="h-10 rounded-lg border-white/20 bg-transparent px-5 text-xs font-bold text-white hover:bg-white/10">
+                        Cancel
+                      </Button>
+                    </div>
+                  </form>
+                ) : (
+                  <form onSubmit={attach} className="space-y-3 p-4">
+                    <Input name="label" required placeholder="A-101 Rev C"
+                      className="h-11 rounded-lg border-white/15 bg-neutral-950 text-sm font-medium text-white placeholder:text-white/30" />
+                    <Input name="url" required type="url" placeholder="https://cloud.mikan-groups.com/…"
+                      className="h-11 rounded-lg border-white/15 bg-neutral-950 text-sm font-medium text-white placeholder:text-white/30" />
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <Select name="kind" defaultValue={isClient ? "markup" : "drawing"}>
+                        <SelectTrigger className="h-11 rounded-lg border-white/15 bg-neutral-950 text-sm font-medium text-white">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-lg">
+                          {(Object.keys(ATTACHMENT_KIND_LABELS) as AttachmentKind[]).map((k) => (
+                            <SelectItem key={k} value={k}>{ATTACHMENT_KIND_LABELS[k]}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Input name="revision" placeholder="Rev C"
+                        className="h-11 rounded-lg border-white/15 bg-neutral-950 text-sm font-medium text-white placeholder:text-white/30" />
+                    </div>
+                    <div className="flex gap-2.5">
+                      <Button type="submit" disabled={busy}
+                        className="h-10 rounded-lg bg-brand-green px-5 text-xs font-bold text-white hover:bg-brand-green/90">
+                        Add link
+                      </Button>
+                      <Button type="button" variant="outline" onClick={() => setAddFile(false)}
+                        className="h-10 rounded-lg border-white/20 bg-transparent px-5 text-xs font-bold text-white hover:bg-white/10">
+                        Cancel
+                      </Button>
+                    </div>
+                    <p className="text-xs font-medium text-white/45">
+                      For files already in Mikan Cloud — nothing is copied here.
+                    </p>
+                  </form>
+                )}
+              </div>
             )}
 
             {files.length === 0 ? (
@@ -365,20 +480,28 @@ export function TaskSheet({
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-bold text-white">
                         {f.label}
-                        {f.revision && <span className="ml-2 font-mono text-xs text-white/55">{f.revision}</span>}
+                        {f.revision && (
+                          <span className="ml-2 rounded-full border border-white/15 px-2 py-0.5 font-mono text-[10px] text-white/60">
+                            {f.revision}
+                          </span>
+                        )}
                       </p>
                       <p className="mt-0.5 text-xs font-medium text-white/50">
-                        {ATTACHMENT_KIND_LABELS[f.kind]} · {f.from_client ? "From client" : "From Mikan"} · {formatDate(f.created_at)}
+                        {ATTACHMENT_KIND_LABELS[f.kind]}
+                        {f.stored_path ? ` · ${fileSize(f.size_bytes)}` : " · Link"}
+                        {" · "}{f.from_client ? "From client" : "From Mikan"}
+                        {" · "}{formatDate(f.created_at)}
                       </p>
                     </div>
-                    <a href={f.url} target="_blank" rel="noopener noreferrer"
-                      aria-label={`Open ${f.label}`}
-                      className="border border-white/15 p-2 text-white/70 transition-colors hover:border-white/35 hover:text-white">
-                      <ExternalLink className="size-3.5" />
+                    <a href={f.stored_path ? api.tasks.attachments.downloadUrl(f.id) : f.url ?? "#"}
+                      target="_blank" rel="noopener noreferrer"
+                      aria-label={`${f.stored_path ? "Download" : "Open"} ${f.label}`}
+                      className="rounded-lg border border-white/15 p-2 text-white/70 transition-colors hover:border-white/35 hover:text-white">
+                      {f.stored_path ? <Download className="size-3.5" /> : <ExternalLink className="size-3.5" />}
                     </a>
                     {(!isClient || f.from_client) && (
                       <button onClick={() => removeFile(f.id)} aria-label={`Remove ${f.label}`}
-                        className="border border-brand-ember/30 p-2 text-brand-ember transition-colors hover:bg-brand-ember/10">
+                        className="rounded-lg border border-brand-ember/30 p-2 text-brand-ember transition-colors hover:bg-brand-ember/10">
                         <Trash2 className="size-3.5" />
                       </button>
                     )}
@@ -403,7 +526,7 @@ export function TaskSheet({
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="text-sm font-bold text-white">{c.author_name}</span>
                       <span className={cn(
-                        "border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide",
+                        "rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide",
                         c.from_client
                           ? "border-brand-cyan/40 text-brand-cyan"
                           : "border-brand-green/40 text-brand-green"
@@ -411,7 +534,7 @@ export function TaskSheet({
                         {c.from_client ? "Client" : "Mikan"}
                       </span>
                       {c.is_verdict_note && (
-                        <span className="border border-brand-ember/40 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-brand-ember">
+                        <span className="rounded-full border border-brand-ember/40 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-brand-ember">
                           Verdict
                         </span>
                       )}

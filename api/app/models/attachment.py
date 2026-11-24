@@ -27,7 +27,13 @@ class Attachment(SQLModel, table=True):
     organisation_id: UUID = Field(foreign_key="organisation.id", index=True)
 
     label: str = Field(max_length=250)
-    url: str = Field(max_length=1000)
+
+    # Either a link somebody pasted, or a file we stored. Exactly one is set.
+    url: str | None = Field(default=None, max_length=1000)
+    stored_path: str | None = Field(default=None, max_length=500)
+    filename: str | None = Field(default=None, max_length=250)
+    size_bytes: int | None = Field(default=None)
+    content_type: str | None = Field(default=None, max_length=120)
     kind: AttachmentKind = Field(default=AttachmentKind.DRAWING, index=True)
     revision: str | None = Field(default=None, max_length=20)
     note: str | None = Field(default=None, max_length=1000)

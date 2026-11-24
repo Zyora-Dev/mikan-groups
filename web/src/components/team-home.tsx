@@ -16,8 +16,9 @@ import {
   VERDICT_LABELS, api,
 } from "@/lib/api";
 import {
-  daysUntil, formatDate, greeting, initials, PRIORITY_STYLE, progressTone,
-  PROJECT_STATUS_STYLE, relativeTime, TASK_STATUS_STYLE, today, VERDICT_STYLE,
+  DUE_TONE, dueChip, formatDate, greeting, initials, PRIORITY_STYLE,
+  progressTone, PROJECT_STATUS_STYLE, relativeTime, TASK_STATUS_STYLE, today,
+  VERDICT_STYLE,
 } from "@/lib/project-ui";
 import { cn } from "@/lib/utils";
 
@@ -332,9 +333,8 @@ function TaskList({
 }
 
 function TaskRow({ t }: { t: DashTask }) {
-  const days = daysUntil(t.due_date);
-  const late = days !== null && days < 0;
-  const soon = days !== null && days >= 0 && days <= 3;
+  const due = dueChip(t.due_date, t.status === "done");
+  const late = due.tone === "overdue";
 
   return (
     <li>
@@ -343,12 +343,12 @@ function TaskRow({ t }: { t: DashTask }) {
         {late && <span className="absolute inset-y-0 left-0 w-0.5 bg-brand-ember" />}
 
         <div className="flex flex-wrap items-center gap-2">
-          <span className={cn("rounded border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide",
+          <span className={cn("rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide",
             TASK_STATUS_STYLE[t.status])}>
             {TASK_STATUS_LABELS[t.status]}
           </span>
           {t.verdict !== "none" && (
-            <span className={cn("rounded border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide",
+            <span className={cn("rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide",
               VERDICT_STYLE[t.verdict])}>
               {VERDICT_LABELS[t.verdict]}
             </span>
@@ -376,13 +376,11 @@ function TaskRow({ t }: { t: DashTask }) {
             {t.progress}%
           </span>
           {t.due_date && (
-            <span className={cn("flex w-24 items-center justify-end gap-1.5 text-xs font-bold",
-              late ? "text-brand-ember" : soon ? "text-brand-orange" : "text-white/45")}>
-              <CalendarClock className="size-3 shrink-0" />
-              {late ? `${Math.abs(days!)}d late`
-                : days === 0 ? "Today"
-                : soon ? `${days}d left`
-                : formatDate(t.due_date)}
+            <span className={cn(
+              "flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-bold",
+              DUE_TONE[due.tone]
+            )}>
+              <CalendarClock className="size-3 shrink-0" /> {due.label}
             </span>
           )}
         </div>
@@ -402,12 +400,12 @@ function ProjectRow({ p }: { p: DashProject }) {
             <span className="text-sm font-bold text-white transition-colors group-hover:text-brand-green">
               {p.title}
             </span>
-            <span className={cn("rounded border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide",
+            <span className={cn("rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide",
               PROJECT_STATUS_STYLE[p.status])}>
               {PROJECT_STATUS_LABELS[p.status]}
             </span>
             {p.overdue_count > 0 && (
-              <span className="flex items-center gap-1 rounded border border-brand-ember/40 bg-brand-ember/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-brand-ember">
+              <span className="flex items-center gap-1 rounded rounded-full border border-brand-ember/40 bg-brand-ember/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-brand-ember">
                 <Clock className="size-3" /> {p.overdue_count}
               </span>
             )}

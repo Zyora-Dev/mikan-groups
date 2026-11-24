@@ -165,7 +165,7 @@ export function TeamMembers() {
                         {m.full_name}
                       </p>
                       <span className={cn(
-                        "border px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide",
+                        "rounded-full border px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide",
                         m.role === "admin"
                           ? "border-brand-orange/40 bg-brand-orange/10 text-brand-orange"
                           : "border-brand-green/40 bg-brand-green/10 text-brand-green"
@@ -173,17 +173,17 @@ export function TeamMembers() {
                         {m.role}
                       </span>
                       {!m.is_active && (
-                        <span className="border border-white/20 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white/60">
+                        <span className="rounded-full border border-white/20 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white/60">
                           Disabled
                         </span>
                       )}
                       {locked && (
-                        <span className="flex items-center gap-1.5 border border-brand-ember/40 bg-brand-ember/10 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-brand-ember">
+                        <span className="flex items-center gap-1.5 rounded-full border border-brand-ember/40 bg-brand-ember/10 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-brand-ember">
                           <Lock className="size-3" /> Locked
                         </span>
                       )}
                       {m.must_change_password && (
-                        <span className="flex items-center gap-1.5 border border-white/20 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white/60">
+                        <span className="flex items-center gap-1.5 rounded-full border border-white/20 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white/60">
                           <KeyRound className="size-3" /> Password pending
                         </span>
                       )}

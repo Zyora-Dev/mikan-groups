@@ -105,3 +105,35 @@ export function initials(name: string): string {
   return name.split(" ").filter(Boolean).slice(0, 2)
     .map((w) => w[0]).join("").toUpperCase();
 }
+
+/** Human file size. */
+export function fileSize(bytes: number | null): string {
+  if (!bytes) return "";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
+/** Deadline as a chip: label plus the tone it should carry. */
+export function dueChip(iso: string | null, done = false): {
+  label: string;
+  tone: "overdue" | "today" | "soon" | "normal" | "none";
+} {
+  if (!iso) return { label: "No deadline", tone: "none" };
+  const d = daysUntil(iso);
+  if (d === null) return { label: "No deadline", tone: "none" };
+  if (done) return { label: formatDate(iso), tone: "normal" };
+  if (d < 0) return { label: `${Math.abs(d)}d overdue`, tone: "overdue" };
+  if (d === 0) return { label: "Due today", tone: "today" };
+  if (d <= 3) return { label: `${d}d left`, tone: "soon" };
+  if (d <= 14) return { label: `Due ${formatDate(iso)}`, tone: "soon" };
+  return { label: `Due ${formatDate(iso)}`, tone: "normal" };
+}
+
+export const DUE_TONE: Record<string, string> = {
+  overdue: "border-brand-ember/40 bg-brand-ember/10 text-brand-ember",
+  today: "border-brand-orange/50 bg-brand-orange/15 text-brand-orange",
+  soon: "border-brand-orange/30 bg-brand-orange/[0.08] text-brand-orange",
+  normal: "border-white/15 bg-white/[0.04] text-white/65",
+  none: "border-white/10 bg-transparent text-white/35",
+};

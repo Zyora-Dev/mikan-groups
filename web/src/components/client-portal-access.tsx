@@ -186,7 +186,7 @@ export function ClientPortalAccess({
                         {u.full_name}
                       </p>
                       <span className={cn(
-                        "border px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide",
+                        "rounded-full border px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide",
                         u.role === "client_admin"
                           ? "border-brand-cyan/40 bg-brand-cyan/10 text-brand-cyan"
                           : "border-white/20 text-white/65"
@@ -194,17 +194,17 @@ export function ClientPortalAccess({
                         {u.role === "client_admin" ? "Client admin" : "Client"}
                       </span>
                       {!u.is_active && (
-                        <span className="border border-white/20 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white/60">
+                        <span className="rounded-full border border-white/20 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white/60">
                           Disabled
                         </span>
                       )}
                       {locked && (
-                        <span className="border border-brand-ember/40 bg-brand-ember/10 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-brand-ember">
+                        <span className="rounded-full border border-brand-ember/40 bg-brand-ember/10 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-brand-ember">
                           Locked
                         </span>
                       )}
                       {u.must_change_password && (
-                        <span className="border border-white/20 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white/60">
+                        <span className="rounded-full border border-white/20 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white/60">
                           Password pending
                         </span>
                       )}

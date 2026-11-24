@@ -227,7 +227,11 @@ export interface Attachment {
   id: string;
   task_id: string;
   label: string;
-  url: string;
+  url: string | null;
+  stored_path: string | null;
+  filename: string | null;
+  size_bytes: number | null;
+  content_type: string | null;
   kind: AttachmentKind;
   revision: string | null;
   note: string | null;
@@ -497,6 +501,26 @@ export const api = {
           method: "POST",
           body: JSON.stringify(body),
         }),
+      /** Multipart upload — bypasses the JSON request helper. */
+      upload: async (taskId: string, form: FormData) => {
+        const res = await fetch(`${API_BASE}/tasks/${taskId}/files`, {
+          method: "POST",
+          credentials: "include",
+          body: form,
+        });
+        if (!res.ok) {
+          let detail = "Upload failed.";
+          try {
+            const body = await res.json();
+            if (typeof body.detail === "string") detail = body.detail;
+          } catch { /* non-JSON */ }
+          throw new ApiError(detail, res.status);
+        }
+        return (await res.json()) as Attachment;
+      },
+
+      downloadUrl: (id: string) => `${API_BASE}/attachments/${id}/download`,
+
       remove: (id: string) =>
         request<void>(`/attachments/${id}`, { method: "DELETE" }),
     },

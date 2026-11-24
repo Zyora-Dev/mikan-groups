@@ -58,6 +58,8 @@ class TaskOut(BaseModel):
 
 
 class AttachmentCreate(BaseModel):
+    """A pasted link. Uploads use the multipart endpoint instead."""
+
     label: str = Field(min_length=1, max_length=250)
     url: str = Field(min_length=4, max_length=1000)
     kind: AttachmentKind = AttachmentKind.DRAWING
@@ -71,7 +73,11 @@ class AttachmentOut(BaseModel):
     id: UUID
     task_id: UUID
     label: str
-    url: str
+    url: str | None
+    stored_path: str | None
+    filename: str | None
+    size_bytes: int | None
+    content_type: str | None
     kind: AttachmentKind
     revision: str | None
     note: str | None
