@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import {
-  AlertCircle, Building2, Check, FileCheck2, Loader2, Plus, Search, Users, X,
+  AlertCircle, Building2, Check, ChevronRight, FileCheck2, Loader2, Plus, Search, Users, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,6 +18,7 @@ import {
   ApiError, CLIENT_TYPE_LABELS, type ClientStatus, type ClientSummary,
   type ClientType, type ContractingEntity, ENTITY_LABELS, api,
 } from "@/lib/api";
+import { ClientDetailSheet } from "@/components/client-detail";
 import { cn } from "@/lib/utils";
 
 const STATUS_STYLE: Record<ClientStatus, string> = {
@@ -45,6 +46,7 @@ export function ClientList() {
   const [busy, setBusy] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [openId, setOpenId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -168,8 +170,9 @@ export function ClientList() {
         ) : (
           <div className="divide-y divide-white/10">
             {clients.map((c) => (
-              <div key={c.id}
-                className="flex flex-wrap items-center gap-5 p-5 transition-colors hover:bg-white/[0.03]">
+              <button key={c.id} type="button"
+                onClick={() => setOpenId(c.id)}
+                className="flex w-full flex-wrap items-center gap-5 p-5 text-left transition-colors hover:bg-white/[0.05] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green focus-visible:ring-inset">
                 <span className="flex size-11 shrink-0 items-center justify-center border border-white/15 bg-neutral-950">
                   <Building2 className="size-5 text-brand-green" />
                 </span>
@@ -207,15 +210,23 @@ export function ClientList() {
                   </p>
                 </div>
 
-                <div className="flex w-20 items-center justify-end gap-2 text-white/70">
+                <div className="flex w-24 items-center justify-end gap-2 text-white/70">
                   <Users className="size-4" />
                   <span className="text-sm font-bold tabular-nums">{c.user_count}</span>
+                  <ChevronRight className="size-4 text-white/35" />
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         )}
       </div>
+
+      <ClientDetailSheet
+        clientId={openId}
+        open={openId !== null}
+        onOpenChange={(o) => !o && setOpenId(null)}
+        onChanged={(msg) => { if (msg) setNotice(msg); void load(); }}
+      />
 
       {/* ---------- Onboard ---------- */}
       <Dialog open={addOpen} onOpenChange={setAddOpen}>

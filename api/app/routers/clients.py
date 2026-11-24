@@ -131,6 +131,32 @@ def get_client(
     return ClientDetail.model_validate(org).model_copy(update={"user_count": count})
 
 
+@router.delete("/{client_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_client(
+    client_id: UUID,
+    admin: AdminUser,
+    session: Annotated[Session, Depends(get_session)],
+) -> None:
+    """Permanently remove a client.
+
+    Only allowed while the record is empty. Once people or project history
+    exist, archive instead — deleting would break the audit trail.
+    """
+    org = _get_client(session, client_id)
+
+    users = session.exec(
+        select(func.count()).select_from(User).where(User.organisation_id == org.id)
+    ).one()
+    if users:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            f"{org.name} has {users} user account(s). Remove them first, or archive the client.",
+        )
+
+    session.delete(org)
+    session.commit()
+
+
 @router.patch("/{client_id}", response_model=ClientDetail)
 def update_client(
     client_id: UUID,

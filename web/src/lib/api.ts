@@ -99,6 +99,26 @@ export interface ClientSummary {
   created_at: string;
 }
 
+export interface ClientDetail extends ClientSummary {
+  registration_no: string | null;
+  tax_no: string | null;
+  website: string | null;
+  default_standard: string | null;
+  city: string | null;
+  address_line1: string | null;
+  address_line2: string | null;
+  postcode: string | null;
+  timezone: string | null;
+  contact_name: string | null;
+  contact_email: string | null;
+  contact_phone: string | null;
+  account_manager_id: string | null;
+  nda_signed_on: string | null;
+  onboarded_on: string | null;
+  notes: string | null;
+  updated_at: string;
+}
+
 export interface NewClient {
   name: string;
   client_type: ClientType;
@@ -116,6 +136,13 @@ export const CLIENT_TYPE_LABELS: Record<ClientType, string> = {
   consultancy: "Consultancy",
   authority: "Authority",
   other: "Other",
+};
+
+export const STATUS_LABELS: Record<ClientStatus, string> = {
+  prospect: "Prospect",
+  active: "Active",
+  dormant: "Dormant",
+  archived: "Archived",
 };
 
 export const ENTITY_LABELS: Record<ContractingEntity, string> = {
@@ -185,10 +212,15 @@ export const api = {
         body: JSON.stringify(body),
       }),
 
+    get: (id: string) => request<ClientDetail>(`/clients/${id}`),
+
     update: (id: string, body: Record<string, unknown>) =>
-      request<ClientSummary>(`/clients/${id}`, {
+      request<ClientDetail>(`/clients/${id}`, {
         method: "PATCH",
         body: JSON.stringify(body),
       }),
+
+    remove: (id: string) =>
+      request<void>(`/clients/${id}`, { method: "DELETE" }),
   },
 };
