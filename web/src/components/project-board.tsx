@@ -1,5 +1,6 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import {
   AlertCircle, CalendarDays, ChevronDown, Clock, FolderOpen, Loader2,
@@ -32,7 +33,9 @@ export function ProjectBoard({
 }: { clientId: string; isClient?: boolean }) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [tasks, setTasks] = useState<Record<string, Task[]>>({});
-  const [expanded, setExpanded] = useState<string | null>(null);
+  const params = useSearchParams();
+  const requested = params?.get("project") ?? null;
+  const [expanded, setExpanded] = useState<string | null>(requested);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,13 +47,17 @@ export function ProjectBoard({
     try {
       const list = await api.projects.list(isClient ? undefined : { client_id: clientId });
       setProjects(list);
-      if (list.length && expanded === null) setExpanded(list[0].id);
+      // Open whichever project the link asked for, else the first.
+      if (list.length && expanded === null) {
+        const wanted = requested && list.some((p) => p.id === requested) ? requested : list[0].id;
+        setExpanded(wanted);
+      }
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not load projects.");
     } finally {
       setLoading(false);
     }
-  }, [clientId, isClient, expanded]);
+  }, [clientId, isClient, expanded, requested]);
 
   useEffect(() => { void load(); }, [load]);
 
