@@ -30,7 +30,15 @@ export function TeamShell({ children }: { children: React.ReactNode }) {
   const [navOpen, setNavOpen] = useState(false);
 
   useEffect(() => {
-    api.me().then(setSession)
+    api.me()
+      .then((s) => {
+        // Forced change applies everywhere, not only straight after login.
+        if (s.user.must_change_password) {
+          router.replace("/internal/erp/team/password");
+          return;
+        }
+        setSession(s);
+      })
       .catch(() => router.replace("/internal/erp/team/login"))
       .finally(() => setChecking(false));
   }, [router]);

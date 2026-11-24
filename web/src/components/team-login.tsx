@@ -29,8 +29,13 @@ export function TeamLogin() {
     setError(null);
     setBusy(true);
     try {
-      await api.login(email, password, true);
-      router.push("/internal/erp/team");
+      const session = await api.login(email, password, true);
+      // An admin set this password, so make them replace it before anything else.
+      router.push(
+        session.user.must_change_password
+          ? "/internal/erp/team/password"
+          : "/internal/erp/team"
+      );
       router.refresh();
     } catch (err) {
       setError(
