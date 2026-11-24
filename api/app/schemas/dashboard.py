@@ -67,6 +67,28 @@ class ActivityRow(BaseModel):
     at: datetime
 
 
+class TrendPoint(BaseModel):
+    """One week of throughput."""
+
+    label: str          # "W/C 17 Nov"
+    created: int = 0
+    completed: int = 0
+
+
+class Slice(BaseModel):
+    key: str
+    label: str
+    value: int
+
+
+class DeadlineBand(BaseModel):
+    overdue: int = 0
+    today: int = 0
+    this_week: int = 0
+    later: int = 0
+    none_set: int = 0
+
+
 class DashboardOut(BaseModel):
     role: str
     stats: StatBlock
@@ -77,3 +99,9 @@ class DashboardOut(BaseModel):
     client_requests: list[TaskRow] = [] # raised by clients, not yet accepted
     projects: list[ProjectRow] = []
     activity: list[ActivityRow] = []
+
+    # charts
+    trend: list[TrendPoint] = []
+    status_mix: list[Slice] = []
+    deadlines: DeadlineBand = DeadlineBand()
+    has_history: bool = False

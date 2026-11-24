@@ -317,6 +317,12 @@ export interface Activity {
   actor: string; from_client: boolean; summary: string; at: string;
 }
 
+export interface TrendPoint { label: string; created: number; completed: number }
+export interface Slice { key: string; label: string; value: number }
+export interface DeadlineBand {
+  overdue: number; today: number; this_week: number; later: number; none_set: number;
+}
+
 export interface Dashboard {
   role: UserRole;
   stats: DashboardStats;
@@ -327,6 +333,10 @@ export interface Dashboard {
   client_requests: DashTask[];
   projects: DashProject[];
   activity: Activity[];
+  trend: TrendPoint[];
+  status_mix: Slice[];
+  deadlines: DeadlineBand;
+  has_history: boolean;
 }
 
 export const api = {

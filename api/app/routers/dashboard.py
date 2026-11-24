@@ -22,9 +22,12 @@ from app.models.user import INTERNAL_ROLES, User, UserRole
 from app.schemas.dashboard import (
     ActivityRow,
     DashboardOut,
+    DeadlineBand,
     ProjectRow,
+    Slice,
     StatBlock,
     TaskRow,
+    TrendPoint,
 )
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
@@ -198,8 +201,54 @@ def get_dashboard(
 
     activity.sort(key=lambda x: x.at, reverse=True)
 
+    # ---- charts ----
+    scoped_tasks = (
+        tasks if is_admin
+        else [t for t in tasks if t.project_id in {p.id for p in visible_projects}]
+    )
+
+    # Eight weeks of created vs completed.
+    monday = today - timedelta(days=today.weekday())
+    trend: list[TrendPoint] = []
+    for back in range(7, -1, -1):
+        start = monday - timedelta(weeks=back)
+        end = start + timedelta(days=7)
+        trend.append(TrendPoint(
+            label=start.strftime("%-d %b"),
+            created=sum(
+                1 for t in scoped_tasks if start <= t.created_at.date() < end
+            ),
+            completed=sum(
+                1 for t in scoped_tasks
+                if t.completed_at and start <= t.completed_at.date() < end
+            ),
+        ))
+
+    status_mix = [
+        Slice(key=st.value, label=st.value.replace("_", " ").title(),
+              value=sum(1 for t in scoped_tasks if t.status is st))
+        for st in TaskStatus
+    ]
+
+    scoped_open = [t for t in scoped_tasks if t.status in OPEN_STATUSES]
+    deadlines = DeadlineBand(
+        overdue=sum(1 for t in scoped_open if t.due_date and t.due_date < today),
+        today=sum(1 for t in scoped_open if t.due_date == today),
+        this_week=sum(
+            1 for t in scoped_open
+            if t.due_date and today < t.due_date <= week_out
+        ),
+        later=sum(1 for t in scoped_open if t.due_date and t.due_date > week_out),
+        none_set=sum(1 for t in scoped_open if not t.due_date),
+    )
+
     return DashboardOut(
         role=user.role.value,
+        trend=trend,
+        status_mix=[s for s in status_mix if s.value > 0],
+        deadlines=deadlines,
+        # Charting two points looks worse than saying there isn't enough yet.
+        has_history=len(scoped_tasks) >= 4,
         stats=stats,
         my_tasks=rows(mine),
         checking=rows(checking),
