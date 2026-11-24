@@ -22,7 +22,7 @@ import {
   VERDICT_LABELS, api,
 } from "@/lib/api";
 import {
-  DUE_TONE, dueChip, formatDate, PRIORITY_STYLE, progressTone,
+  DUE_TONE, dueChip, PRIORITY_STYLE, progressTone,
   PROJECT_STATUS_STYLE, TASK_STATUS_STYLE, VERDICT_STYLE,
 } from "@/lib/project-ui";
 import { cn } from "@/lib/utils";
@@ -203,6 +203,15 @@ export function ProjectBoard({
                           <Clock className="size-3" /> {p.overdue_count} overdue
                         </span>
                       )}
+                      {p.target_date && (
+                        <span className={cn(
+                          "flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-bold",
+                          DUE_TONE[dueChip(p.target_date, p.status === "completed").tone]
+                        )}>
+                          <CalendarDays className="size-3" />
+                          {dueChip(p.target_date, p.status === "completed").label}
+                        </span>
+                      )}
                       {p.awaiting_client > 0 && (
                         <span className="rounded-full border border-brand-orange/40 bg-brand-orange/10 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-brand-orange">
                           {p.awaiting_client} awaiting {isClient ? "you" : "client"}
@@ -212,7 +221,6 @@ export function ProjectBoard({
                     <p className="mt-1.5 text-xs font-medium text-white/45">
                       {p.done_count}/{p.task_count} tasks
                       {p.standard && ` · ${p.standard}`}
-                      {p.target_date && ` · due ${formatDate(p.target_date)}`}
                     </p>
                   </div>
 

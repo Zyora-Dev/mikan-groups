@@ -16,7 +16,7 @@ import {
   VERDICT_LABELS, api,
 } from "@/lib/api";
 import {
-  DUE_TONE, dueChip, formatDate, greeting, initials, PRIORITY_STYLE,
+  DUE_TONE, dueChip, greeting, initials, PRIORITY_STYLE,
   progressTone, PROJECT_STATUS_STYLE, relativeTime, TASK_STATUS_STYLE, today,
   VERDICT_STYLE,
 } from "@/lib/project-ui";
@@ -412,7 +412,6 @@ function ProjectRow({ p }: { p: DashProject }) {
           </div>
           <p className="mt-1.5 text-xs font-medium text-white/50">
             {p.client_name} · {p.done_count}/{p.task_count} tasks
-            {p.target_date && ` · due ${formatDate(p.target_date)}`}
           </p>
         </div>
         <div className="flex w-32 items-center gap-2.5">
