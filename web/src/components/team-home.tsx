@@ -51,17 +51,17 @@ export function TeamHome() {
     (isAdmin ? 0 : data.checking.length);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* ---------- header ---------- */}
       <header className="flex flex-wrap items-start justify-between gap-5">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-green">
             {today()}
           </p>
-          <h1 className="mt-2.5 font-display text-3xl font-700 uppercase leading-none text-white md:text-4xl">
+          <h1 className="mt-2 font-display text-2xl font-700 uppercase leading-none text-white md:text-3xl">
             {greeting()}{firstName && `, ${firstName}`}
           </h1>
-          <p className="mt-2.5 text-sm font-medium text-white/55">
+          <p className="mt-2 text-sm font-medium text-white/55">
             {attention === 0
               ? isAdmin ? "Nothing needs your attention right now." : "You're all caught up."
               : `${attention} item${attention === 1 ? "" : "s"} need${attention === 1 ? "s" : ""} attention.`}
@@ -106,7 +106,7 @@ export function TeamHome() {
       )}
 
       {/* ---------- charts ---------- */}
-      <div className="grid gap-6 xl:grid-cols-[1.6fr_1fr]">
+      <div className="grid gap-5 xl:grid-cols-[1.6fr_1fr]">
         <Card title="Throughput" subtitle="Tasks created and completed, last eight weeks"
           legend={[
             { label: "Created", colour: "#29ABE2" },
@@ -120,7 +120,7 @@ export function TeamHome() {
         </Card>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1fr_1.6fr]">
+      <div className="grid gap-5 xl:grid-cols-[1fr_1.6fr]">
         <Card title="Deadlines" subtitle="Open tasks by when they're due">
           <DeadlineBars data={data.deadlines} />
         </Card>
@@ -138,7 +138,7 @@ export function TeamHome() {
       </div>
 
       {/* ---------- lists ---------- */}
-      <div className="grid gap-6 xl:grid-cols-2">
+      <div className="grid gap-5 xl:grid-cols-2">
         {!isAdmin && (
           <TaskList title="Assigned to me" Icon={ClipboardList} tasks={data.my_tasks}
             empty="Nothing assigned to you yet." />
@@ -185,7 +185,7 @@ function Card({
 }) {
   return (
     <section className="flex flex-col overflow-hidden rounded-xl border border-white/10 bg-neutral-900">
-      <div className="flex flex-wrap items-start justify-between gap-3 px-5 py-4">
+      <div className="flex flex-wrap items-start justify-between gap-3 px-5 py-3.5">
         <div>
           <h2 className="flex items-center gap-2.5 text-sm font-bold text-white">
             {Icon && <Icon className="size-4 text-white/45" />} {title}
@@ -232,28 +232,28 @@ function Kpi({
 
   const body = (
     <>
-      <div className="flex items-start justify-between">
+      <div className="flex items-center gap-3">
         <span className={cn(
-          "flex size-10 items-center justify-center rounded-lg",
+          "flex size-8 shrink-0 items-center justify-center rounded-lg",
           hot
             ? tone === "danger" ? "bg-brand-ember/15" : "bg-brand-orange/15"
             : "bg-white/[0.06]"
         )}>
-          <Icon className={cn("size-4.5", hot ? colour : "text-brand-green")} />
+          <Icon className={cn("size-4", hot ? colour : "text-brand-green")} />
         </span>
+        <p className={cn("font-display text-3xl font-700 leading-none tabular-nums", colour)}>
+          {value}
+        </p>
         {href && (
-          <ArrowUpRight className="size-4 text-white/20 transition-colors group-hover:text-white/70" />
+          <ArrowUpRight className="ml-auto size-3.5 text-white/20 transition-colors group-hover:text-white/70" />
         )}
       </div>
-      <p className={cn("mt-5 font-display text-4xl font-700 leading-none tabular-nums", colour)}>
-        {value}
-      </p>
-      <p className="mt-2.5 text-sm font-bold text-white">{label}</p>
-      {sub && <p className="mt-1 text-xs font-medium text-white/45">{sub}</p>}
+      <p className="mt-3 text-sm font-bold leading-tight text-white">{label}</p>
+      {sub && <p className="mt-0.5 text-xs font-medium text-white/45">{sub}</p>}
     </>
   );
 
-  const shell = "group bg-neutral-900 p-5 transition-colors";
+  const shell = "group bg-neutral-900 p-4 transition-colors";
   return href ? (
     <Link href={href} className={cn(shell, "hover:bg-neutral-800")}>{body}</Link>
   ) : (
@@ -278,7 +278,7 @@ function Skeleton() {
           <div key={i} className="h-40 animate-pulse bg-neutral-900" />
         ))}
       </div>
-      <div className="grid gap-6 xl:grid-cols-[1.6fr_1fr]">
+      <div className="grid gap-5 xl:grid-cols-[1.6fr_1fr]">
         <div className="h-80 animate-pulse rounded-xl bg-neutral-900" />
         <div className="h-80 animate-pulse rounded-xl bg-neutral-900" />
       </div>
@@ -302,7 +302,7 @@ function TaskList({
       "flex flex-col overflow-hidden rounded-xl border bg-neutral-900",
       hot ? tone === "danger" ? "border-brand-ember/25" : "border-brand-orange/25" : "border-white/10"
     )}>
-      <div className="flex items-center justify-between px-5 py-4">
+      <div className="flex items-center justify-between px-5 py-3.5">
         <h2 className={cn("flex items-center gap-2.5 text-sm font-bold",
           hot ? tone === "danger" ? "text-brand-ember" : "text-brand-orange" : "text-white")}>
           <Icon className="size-4" /> {title}
@@ -339,7 +339,7 @@ function TaskRow({ t }: { t: DashTask }) {
   return (
     <li>
       <Link href={`/internal/erp/team/clients/${t.client_id}`}
-        className="group relative block px-5 py-4 transition-colors hover:bg-white/[0.04]">
+        className="group relative block px-5 py-3 transition-colors hover:bg-white/[0.04]">
         {late && <span className="absolute inset-y-0 left-0 w-0.5 bg-brand-ember" />}
 
         <div className="flex flex-wrap items-center gap-2">
@@ -359,7 +359,7 @@ function TaskRow({ t }: { t: DashTask }) {
           </span>
         </div>
 
-        <p className="mt-2.5 text-sm font-bold leading-snug text-white transition-colors group-hover:text-brand-green">
+        <p className="mt-2 text-sm font-bold leading-snug text-white transition-colors group-hover:text-brand-green">
           {t.title}
         </p>
         <p className="mt-1 text-xs font-medium text-white/50">
@@ -367,7 +367,7 @@ function TaskRow({ t }: { t: DashTask }) {
           {" · "}{t.client_name}
         </p>
 
-        <div className="mt-3.5 flex items-center gap-3">
+        <div className="mt-2.5 flex items-center gap-3">
           <div className="h-1 flex-1 rounded-full bg-white/[0.08]">
             <div className={cn("h-full rounded-full transition-all duration-500", progressTone(t.status))}
               style={{ width: `${t.progress}%` }} />
@@ -393,7 +393,7 @@ function ProjectRow({ p }: { p: DashProject }) {
   return (
     <li>
       <Link href={`/internal/erp/team/clients/${p.client_id}`}
-        className="group flex flex-wrap items-center gap-5 px-5 py-4 transition-colors hover:bg-white/[0.04]">
+        className="group flex flex-wrap items-center gap-5 px-5 py-3 transition-colors hover:bg-white/[0.04]">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2.5">
             <span className="font-mono text-xs font-bold text-brand-green">{p.job_number}</span>
@@ -433,7 +433,7 @@ function ActivityItem({ a }: { a: Activity }) {
     : a.kind === "verdict" ? ThumbsUp : MessageSquare;
 
   return (
-    <li className="flex gap-3.5 px-5 py-4">
+    <li className="flex gap-3 px-5 py-3">
       <span className={cn(
         "flex size-9 shrink-0 items-center justify-center rounded-lg border text-[11px] font-bold",
         a.from_client

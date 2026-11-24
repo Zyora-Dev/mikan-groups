@@ -391,6 +391,52 @@ export interface Dashboard {
   has_history: boolean;
 }
 
+// ------------------------------------------------------------ client portal
+
+export interface PortalStats {
+  projects_active: number; projects_total: number;
+  tasks_open: number; tasks_done: number;
+  awaiting_you: number; changes_requested: number;
+  requests_pending: number; overdue: number;
+  due_this_week: number; files_shared: number;
+}
+
+export interface PortalFile {
+  id: string;
+  label: string;
+  filename: string | null;
+  url: string | null;
+  has_file: boolean;
+  kind: AttachmentKind;
+  revision: string | null;
+  size_bytes: number | null;
+  from_client: boolean;
+  task_id: string;
+  task_title: string;
+  project_id: string;
+  project_title: string;
+  job_number: string;
+  created_at: string;
+}
+
+export interface PortalDashboard {
+  organisation: string;
+  user_name: string;
+  role: UserRole;
+  stats: PortalStats;
+  awaiting_you: DashTask[];
+  in_progress: DashTask[];
+  changes_requested: DashTask[];
+  my_requests: DashTask[];
+  projects: DashProject[];
+  recent_files: PortalFile[];
+  activity: Activity[];
+  trend: TrendPoint[];
+  status_mix: Slice[];
+  deadlines: DeadlineBand;
+  has_history: boolean;
+}
+
 // ------------------------------------------------- notifications & audit
 
 export interface EmailSettings {
@@ -482,6 +528,14 @@ export const api = {
   me: () => request<Session>("/auth/me"),
 
   dashboard: () => request<Dashboard>("/dashboard"),
+
+  portal: {
+    dashboard: () => request<PortalDashboard>("/portal/dashboard"),
+    files: (projectId?: string) =>
+      request<PortalFile[]>(
+        `/portal/files${projectId ? `?project_id=${projectId}` : ""}`,
+      ),
+  },
 
   notifications: {
     list: (unreadOnly = false) =>

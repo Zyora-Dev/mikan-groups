@@ -40,7 +40,7 @@ export function ThroughputChart({
 }: { data: TrendPoint[]; hasHistory: boolean }) {
   if (!hasHistory) {
     return (
-      <div className="flex h-[17rem] flex-col items-center justify-center gap-3 px-6 text-center">
+      <div className="flex h-[15rem] flex-col items-center justify-center gap-3 px-6 text-center">
         <BarChart3 className="size-7 text-white/20" />
         <p className="text-sm font-bold text-white/70">Not enough history yet</p>
         <p className="max-w-xs text-xs font-medium leading-relaxed text-white/45">
@@ -52,7 +52,7 @@ export function ThroughputChart({
   }
 
   return (
-    <div className="h-[17rem] px-2 pb-2">
+    <div className="h-[15rem] px-2 pb-2">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 16, right: 8, left: -18, bottom: 0 }}
           barGap={4}>
@@ -87,7 +87,7 @@ export function StatusDonut({ data }: { data: Slice[] }) {
 
   if (!total) {
     return (
-      <div className="flex h-[17rem] items-center justify-center">
+      <div className="flex h-[15rem] items-center justify-center">
         <p className="text-sm font-medium text-white/40">No tasks yet</p>
       </div>
     );
@@ -97,8 +97,8 @@ export function StatusDonut({ data }: { data: Slice[] }) {
   const pct = Math.round((done / total) * 100);
 
   return (
-    <div className="px-5 pb-5">
-      <div className="relative h-44">
+    <div className="px-5 pb-4">
+      <div className="relative h-40">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie data={data} dataKey="value" nameKey="label"
@@ -127,7 +127,7 @@ export function StatusDonut({ data }: { data: Slice[] }) {
         </div>
       </div>
 
-      <ul className="mt-5 space-y-2">
+      <ul className="mt-4 space-y-1.5">
         {data.map((d) => (
           <li key={d.key} className="flex items-center gap-2.5">
             <span className="size-2 shrink-0"

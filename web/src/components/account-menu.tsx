@@ -8,8 +8,15 @@ import { type Session, api } from "@/lib/api";
 import { initials } from "@/lib/project-ui";
 import { cn } from "@/lib/utils";
 
-export function AccountMenu({ session }: { session: Session }) {
+/** `variant` decides where sign-out lands and which links the menu offers. */
+export function AccountMenu({
+  session, variant = "team",
+}: {
+  session: Session;
+  variant?: "team" | "portal";
+}) {
   const router = useRouter();
+  const isPortal = variant === "portal";
   const [open, setOpen] = useState(false);
   const wrap = useRef<HTMLDivElement>(null);
 
@@ -31,10 +38,11 @@ export function AccountMenu({ session }: { session: Session }) {
 
   async function signOut() {
     await api.logout().catch(() => {});
-    router.replace("/internal/erp/team/login");
+    router.replace(isPortal ? "/portal" : "/internal/erp/team/login");
   }
 
   const isAdmin = session.user.role === "admin";
+  const isClientAdmin = session.user.role === "client_admin";
 
   return (
     <div className="relative" ref={wrap}>
@@ -54,7 +62,7 @@ export function AccountMenu({ session }: { session: Session }) {
             {session.user.full_name}
           </span>
           <span className="block text-[10px] font-bold uppercase tracking-wide text-brand-green">
-            {session.user.role}
+            {isPortal ? (isClientAdmin ? "Account admin" : "Client") : session.user.role}
           </span>
         </span>
         <ChevronDown className={cn(
@@ -79,9 +87,12 @@ export function AccountMenu({ session }: { session: Session }) {
           </div>
 
           <nav className="p-1.5">
-            <Item href="/internal/erp/team/password" Icon={KeyRound}
-              label="Change password" onNavigate={() => setOpen(false)} />
-            {isAdmin && (
+            <Item href={isPortal ? "/portal/password" : "/internal/erp/team/password"}
+              Icon={KeyRound} label="Change password" onNavigate={() => setOpen(false)} />
+            {isPortal ? (
+              <Item href="/portal/account" Icon={User}
+                label="Account" onNavigate={() => setOpen(false)} />
+            ) : isAdmin && (
               <>
                 <Item href="/internal/erp/team/members" Icon={User}
                   label="Team members" onNavigate={() => setOpen(false)} />

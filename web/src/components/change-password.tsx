@@ -22,8 +22,16 @@ function checks(pw: string, current: string) {
   ];
 }
 
-export function ChangePassword() {
+/** Serves both applications — `variant` decides where it redirects. */
+export function ChangePassword({
+  variant = "team",
+}: {
+  variant?: "team" | "portal";
+}) {
   const router = useRouter();
+  const isPortal = variant === "portal";
+  const loginHref = isPortal ? "/portal" : "/internal/erp/team/login";
+  const homeHref = isPortal ? "/portal/overview" : "/internal/erp/team";
   const [session, setSession] = useState<Session | null>(null);
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
@@ -34,8 +42,8 @@ export function ChangePassword() {
 
   useEffect(() => {
     api.me().then(setSession)
-      .catch(() => router.replace("/internal/erp/team/login"));
-  }, [router]);
+      .catch(() => router.replace(loginHref));
+  }, [router, loginHref]);
 
   const rules = checks(next, current);
   const ready = rules.every((r) => r.ok) && next === confirm && current.length > 0;
@@ -47,7 +55,7 @@ export function ChangePassword() {
     setBusy(true);
     try {
       await api.changePassword(current, next);
-      router.replace("/internal/erp/team");
+      router.replace(homeHref);
       router.refresh();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not change the password.");
@@ -70,7 +78,7 @@ export function ChangePassword() {
             </div>
             <div className="border-l border-white/15 pl-4">
               <p className="font-display text-base font-700 uppercase leading-none text-white">
-                ERP
+                {isPortal ? "Portal" : "ERP"}
               </p>
               <p className="mt-1 text-xs font-bold uppercase tracking-wide text-brand-green">
                 {session?.user.full_name ?? "Account"}

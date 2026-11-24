@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   ArrowLeft, ArrowRight, Eye, EyeOff, Loader2, Lock, Mail, ShieldCheck,
 } from "lucide-react";
@@ -10,21 +11,30 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PortalIllustration } from "@/components/portal-illustration";
+import { ApiError, api } from "@/lib/api";
 import { site } from "@/lib/site";
-import { cn } from "@/lib/utils";
-
-const ROLES = [
-  { value: "client", label: "Client", meta: "Track your drawings" },
-  { value: "team", label: "Mikan team", meta: "Internal access" },
-] as const;
 
 export function PortalLogin() {
-  const [role, setRole] = useState<string>("client");
+  const router = useRouter();
   const [reveal, setReveal] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [checking, setChecking] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+  // Already signed in? Don't make them type it again.
+  useEffect(() => {
+    api.me()
+      .then((s) => {
+        if (s.user.role === "client" || s.user.role === "client_admin") {
+          router.replace("/portal/overview");
+        } else {
+          setChecking(false);
+        }
+      })
+      .catch(() => setChecking(false));
+  }, [router]);
+
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
     const email = String(fd.get("email") ?? "").trim();
@@ -34,18 +44,39 @@ export function PortalLogin() {
       setError("Enter a valid email address.");
       return;
     }
-    if (pwd.length < 6) {
+    if (!pwd) {
       setError("Enter your password.");
       return;
     }
 
     setError(null);
     setBusy(true);
-    // No auth backend yet — surface that honestly instead of pretending.
-    window.setTimeout(() => {
+    try {
+      const session = await api.login(email, pwd);
+      // Staff credentials are valid, but this door isn't theirs.
+      if (session.user.role !== "client" && session.user.role !== "client_admin") {
+        await api.logout().catch(() => {});
+        setError("This sign-in is for client accounts.");
+        setBusy(false);
+        return;
+      }
+      router.replace(
+        session.user.must_change_password ? "/portal/password" : "/portal/overview",
+      );
+    } catch (err) {
+      setError(
+        err instanceof ApiError ? err.message : "Could not reach the server. Try again.",
+      );
       setBusy(false);
-      setError("The portal isn't live yet. Contact us and we'll set up your access.");
-    }, 900);
+    }
+  }
+
+  if (checking) {
+    return (
+      <main className="flex h-screen items-center justify-center bg-[#0d2419]">
+        <Loader2 className="size-6 animate-spin text-brand-green" />
+      </main>
+    );
   }
 
   return (
@@ -74,38 +105,7 @@ export function PortalLogin() {
               Welcome back. Enter your details to reach your project files.
             </p>
 
-            {/* role toggle */}
-            <div className="mt-6 grid grid-cols-2 gap-2.5">
-              {ROLES.map((r) => (
-                <button
-                  key={r.value}
-                  type="button"
-                  onClick={() => setRole(r.value)}
-                  aria-pressed={role === r.value}
-                  className={cn(
-                    "border p-3.5 text-left transition-all duration-200",
-                    role === r.value
-                      ? "border-brand-green bg-brand-green/10"
-                      : "border-border bg-background hover:border-foreground/30"
-                  )}
-                >
-                  <span className="flex items-center gap-2">
-                    <span className={cn(
-                      "flex size-4 items-center justify-center rounded-full border-2 transition-colors",
-                      role === r.value ? "border-brand-green" : "border-border"
-                    )}>
-                      {role === r.value && <span className="size-2 rounded-full bg-brand-green" />}
-                    </span>
-                    <span className="text-sm font-bold text-foreground">{r.label}</span>
-                  </span>
-                  <span className="mt-1 block pl-6 text-xs font-medium text-foreground/65">
-                    {r.meta}
-                  </span>
-                </button>
-              ))}
-            </div>
-
-            <form onSubmit={onSubmit} noValidate className="mt-6 space-y-4">
+            <form onSubmit={onSubmit} noValidate className="mt-7 space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm font-bold uppercase tracking-wide text-foreground">
                   Email <span className="text-brand-green">*</span>

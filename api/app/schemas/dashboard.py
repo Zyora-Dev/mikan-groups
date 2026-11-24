@@ -105,3 +105,59 @@ class DashboardOut(BaseModel):
     status_mix: list[Slice] = []
     deadlines: DeadlineBand = DeadlineBand()
     has_history: bool = False
+
+
+# --------------------------------------------------------------- client side
+
+
+class PortalStats(BaseModel):
+    """Counts a client cares about — their own work only."""
+
+    projects_active: int = 0
+    projects_total: int = 0
+    tasks_open: int = 0
+    tasks_done: int = 0
+    awaiting_you: int = 0        # submitted, waiting on the client's verdict
+    changes_requested: int = 0
+    requests_pending: int = 0    # raised by the client, not yet accepted
+    overdue: int = 0
+    due_this_week: int = 0
+    files_shared: int = 0
+
+
+class PortalFile(BaseModel):
+    """A deliverable surfaced on its own, outside the task it hangs off."""
+
+    id: UUID
+    label: str
+    filename: str | None = None
+    url: str | None = None
+    has_file: bool = False
+    kind: str
+    revision: str | None = None
+    size_bytes: int | None = None
+    from_client: bool = False
+    task_id: UUID
+    task_title: str = ""
+    project_id: UUID
+    project_title: str = ""
+    job_number: str = ""
+    created_at: datetime
+
+
+class PortalOut(BaseModel):
+    organisation: str
+    user_name: str
+    role: str
+    stats: PortalStats
+    awaiting_you: list[TaskRow] = []     # needs the client's decision
+    in_progress: list[TaskRow] = []      # Mikan is working on these
+    changes_requested: list[TaskRow] = []
+    my_requests: list[TaskRow] = []      # raised by this client
+    projects: list[ProjectRow] = []
+    recent_files: list[PortalFile] = []
+    activity: list[ActivityRow] = []
+    trend: list[TrendPoint] = []
+    status_mix: list[Slice] = []
+    deadlines: DeadlineBand = DeadlineBand()
+    has_history: bool = False

@@ -78,14 +78,21 @@ def dispatch(
     entity_id: UUID | None = None,
     project_id: UUID | None = None,
     link: str | None = None,
+    client_link: str | None = None,
     send_email: bool = True,
 ) -> None:
-    """Create a notification per recipient, emailing where configured."""
+    """Create a notification per recipient, emailing where configured.
+
+    The link is resolved per recipient: a client is never handed an
+    internal route they cannot open, whatever the calling event passes.
+    """
     config = _config(session) if send_email else None
 
     for person in recipients:
         if person.id == actor.id:
             continue  # nobody needs telling what they just did
+
+        target = link if person.is_internal else (client_link or "/portal/overview")
 
         note = Notification(
             user_id=person.id,
@@ -95,7 +102,7 @@ def dispatch(
             entity_type=entity_type,
             entity_id=entity_id,
             project_id=project_id,
-            link=link,
+            link=target,
         )
 
         if config and config.enabled and person.email:
@@ -105,7 +112,7 @@ def dispatch(
                 to_name=person.full_name,
                 subject=title,
                 html=email_service.render(
-                    title, body, f"{WEB_BASE}{link}" if link else None
+                    title, body, f"{WEB_BASE}{target}" if target else None
                 ),
             )
             if result.ok:
@@ -138,7 +145,8 @@ def task_submitted(session: Session, actor: User, task: Task, project: Project) 
         entity_type="task",
         entity_id=task.id,
         project_id=project.id,
-        link="/portal",
+        link=f"/internal/erp/team/clients/{task.organisation_id}?project={project.id}",
+        client_link=f"/portal/projects/{project.id}",
     )
 
 
@@ -168,6 +176,7 @@ def verdict_given(
         entity_id=task.id,
         project_id=project.id,
         link=f"/internal/erp/team/clients/{task.organisation_id}?project={project.id}",
+        client_link=f"/portal/projects/{project.id}",
     )
 
 
@@ -184,10 +193,6 @@ def comment_added(
         if not actor.is_internal
         else _client_users(session, task.organisation_id)
     )
-    link = (
-        f"/internal/erp/team/clients/{task.organisation_id}?project={project.id}"
-        if not actor.is_internal else "/portal"
-    )
     dispatch(
         session,
         recipients=recipients,
@@ -197,7 +202,8 @@ def comment_added(
         entity_type="task",
         entity_id=task.id,
         project_id=project.id,
-        link=link,
+        link=f"/internal/erp/team/clients/{task.organisation_id}?project={project.id}",
+        client_link=f"/portal/projects/{project.id}",
     )
 
 
@@ -221,6 +227,7 @@ def task_assigned(
         entity_id=task.id,
         project_id=project.id,
         link=f"/internal/erp/team/clients/{task.organisation_id}?project={project.id}",
+        client_link=f"/portal/projects/{project.id}",
     )
 
 
@@ -241,4 +248,5 @@ def task_requested(session: Session, actor: User, task: Task, project: Project) 
         entity_id=task.id,
         project_id=project.id,
         link=f"/internal/erp/team/clients/{task.organisation_id}?project={project.id}",
+        client_link=f"/portal/projects/{project.id}",
     )

@@ -137,3 +137,10 @@ export const DUE_TONE: Record<string, string> = {
   normal: "border-white/15 bg-white/[0.04] text-white/65",
   none: "border-white/10 bg-transparent text-white/35",
 };
+
+/** Revisions arrive as "A" or "Rev A"; render one "Rev" either way. */
+export function revLabel(revision: string | null): string | null {
+  if (!revision) return null;
+  const bare = revision.replace(/^\s*rev\.?\s*/i, "").trim();
+  return bare ? `Rev ${bare}` : null;
+}

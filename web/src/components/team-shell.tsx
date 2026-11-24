@@ -46,6 +46,12 @@ export function TeamShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     api.me()
       .then((s) => {
+        // A signed-in client passes /auth/me but has no business here —
+        // without this they'd sit on a shell the API refuses to fill.
+        if (s.user.role !== "admin" && s.user.role !== "engineer") {
+          router.replace("/portal/overview");
+          return;
+        }
         // Forced change applies everywhere, not only straight after login.
         if (s.user.must_change_password) {
           router.replace("/internal/erp/team/password");
