@@ -6,7 +6,7 @@ from sqlmodel import SQLModel
 
 from app.core.config import get_settings
 from app.core.db import engine
-from app.routers import auth, clients, projects, team
+from app.routers import auth, clients, dashboard, projects, team
 
 settings = get_settings()
 
@@ -40,6 +40,7 @@ app.include_router(auth.router, prefix="/api/v1")
 app.include_router(team.router, prefix="/api/v1")
 app.include_router(clients.router, prefix="/api/v1")
 app.include_router(projects.router, prefix="/api/v1")
+app.include_router(dashboard.router, prefix="/api/v1")
 
 
 @app.get("/health", tags=["meta"])

@@ -287,6 +287,48 @@ export const ATTACHMENT_KIND_LABELS: Record<AttachmentKind, string> = {
   other: "Other",
 };
 
+export interface DashboardStats {
+  clients_active: number; clients_total: number;
+  projects_active: number; projects_total: number;
+  tasks_open: number; tasks_overdue: number;
+  awaiting_client: number; due_this_week: number;
+  team_size: number; portal_users: number;
+}
+
+export interface DashTask {
+  id: string; title: string;
+  status: TaskStatus; verdict: ClientVerdict; priority: TaskPriority;
+  progress: number; due_date: string | null;
+  project_id: string; project_title: string; job_number: string;
+  client_id: string; client_name: string;
+  raised_by_client: boolean;
+}
+
+export interface DashProject {
+  id: string; job_number: string; title: string;
+  status: ProjectStatus; target_date: string | null;
+  client_id: string; client_name: string;
+  task_count: number; done_count: number; progress: number; overdue_count: number;
+}
+
+export interface Activity {
+  kind: "comment" | "verdict" | "attachment";
+  task_id: string; task_title: string; client_name: string;
+  actor: string; from_client: boolean; summary: string; at: string;
+}
+
+export interface Dashboard {
+  role: UserRole;
+  stats: DashboardStats;
+  my_tasks: DashTask[];
+  checking: DashTask[];
+  overdue: DashTask[];
+  awaiting_client: DashTask[];
+  client_requests: DashTask[];
+  projects: DashProject[];
+  activity: Activity[];
+}
+
 export const api = {
   /** `internal` restricts the attempt to Mikan staff accounts. */
   login: (email: string, password: string, internal = false) =>
@@ -298,6 +340,8 @@ export const api = {
   logout: () => request<void>("/auth/logout", { method: "POST" }),
 
   me: () => request<Session>("/auth/me"),
+
+  dashboard: () => request<Dashboard>("/dashboard"),
 
   changePassword: (current_password: string, new_password: string) =>
     request<void>("/auth/password", {

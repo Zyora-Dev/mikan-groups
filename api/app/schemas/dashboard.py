@@ -1,0 +1,79 @@
+from datetime import date, datetime
+from uuid import UUID
+
+from pydantic import BaseModel, ConfigDict
+
+from app.models.project import ProjectStatus
+from app.models.task import ClientVerdict, TaskPriority, TaskStatus
+
+
+class StatBlock(BaseModel):
+    clients_active: int = 0
+    clients_total: int = 0
+    projects_active: int = 0
+    projects_total: int = 0
+    tasks_open: int = 0
+    tasks_overdue: int = 0
+    awaiting_client: int = 0
+    due_this_week: int = 0
+    team_size: int = 0
+    portal_users: int = 0
+
+
+class TaskRow(BaseModel):
+    """A task flattened with the names a dashboard needs."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    title: str
+    status: TaskStatus
+    verdict: ClientVerdict
+    priority: TaskPriority
+    progress: int
+    due_date: date | None
+    project_id: UUID
+    project_title: str = ""
+    job_number: str = ""
+    client_id: UUID
+    client_name: str = ""
+    raised_by_client: bool = False
+
+
+class ProjectRow(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    job_number: str
+    title: str
+    status: ProjectStatus
+    target_date: date | None
+    client_id: UUID
+    client_name: str = ""
+    task_count: int = 0
+    done_count: int = 0
+    progress: int = 0
+    overdue_count: int = 0
+
+
+class ActivityRow(BaseModel):
+    kind: str          # comment | verdict | attachment
+    task_id: UUID
+    task_title: str
+    client_name: str
+    actor: str
+    from_client: bool
+    summary: str
+    at: datetime
+
+
+class DashboardOut(BaseModel):
+    role: str
+    stats: StatBlock
+    my_tasks: list[TaskRow] = []        # assigned to me
+    checking: list[TaskRow] = []        # I am the checker
+    overdue: list[TaskRow] = []
+    awaiting_client: list[TaskRow] = []
+    client_requests: list[TaskRow] = [] # raised by clients, not yet accepted
+    projects: list[ProjectRow] = []
+    activity: list[ActivityRow] = []
