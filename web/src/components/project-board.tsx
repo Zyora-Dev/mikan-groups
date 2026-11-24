@@ -7,6 +7,7 @@ import {
   MessageSquare, Paperclip, Plus, Trash2,
 } from "lucide-react";
 import { AssigneeChip, AssigneePicker } from "@/components/assignee-picker";
+import { ProjectTeam } from "@/components/project-team";
 import { Button } from "@/components/ui/button";
 import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
@@ -238,7 +239,28 @@ export function ProjectBoard({
                     <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-medium text-white/45">
                       <span>{p.done_count}/{p.task_count} tasks</span>
                       {p.standard && <span>{p.standard}</span>}
-                      {!isClient && <AssigneeChip name={p.lead_engineer_name} role="Lead engineer" />}
+                      {!isClient && (
+                        p.member_count > 0 ? (
+                          <span className="flex items-center gap-1.5"
+                            title={p.member_names.join(", ")}>
+                            <span className="flex -space-x-1.5">
+                              {p.member_names.slice(0, 3).map((n) => (
+                                <span key={n}
+                                  className="flex size-5 items-center justify-center rounded-full border border-neutral-900 bg-brand-green/15 text-[8px] font-bold text-brand-green">
+                                  {n.split(" ").filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase()}
+                                </span>
+                              ))}
+                            </span>
+                            {p.member_count > 3 && (
+                              <span className="text-[11px] font-bold text-white/50">
+                                +{p.member_count - 3}
+                              </span>
+                            )}
+                          </span>
+                        ) : (
+                          <AssigneeChip name={null} role="Team" />
+                        )
+                      )}
                     </div>
                   </div>
 
@@ -283,6 +305,12 @@ export function ProjectBoard({
                         className="mb-4 h-10 rounded-lg border-white/20 bg-transparent px-4 text-xs font-bold text-white hover:bg-white/10">
                         <Plus className="mr-1.5 size-3.5" /> Request work
                       </Button>
+                    )}
+
+                    {!isClient && (
+                      <div className="mb-4">
+                        <ProjectTeam projectId={p.id} onChanged={() => void load()} />
+                      </div>
                     )}
 
                     {list.length === 0 ? (

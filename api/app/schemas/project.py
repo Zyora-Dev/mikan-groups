@@ -48,8 +48,30 @@ class ProjectOut(BaseModel):
     created_at: datetime
 
     # computed
+    member_count: int = 0
+    member_names: list[str] = []
     task_count: int = 0
     done_count: int = 0
     progress: int = 0
     overdue_count: int = 0
     awaiting_client: int = 0
+
+
+class ProjectMemberAdd(BaseModel):
+    user_id: UUID
+    role: str = "engineer"
+    note: str | None = Field(default=None, max_length=250)
+
+
+class ProjectMemberOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    project_id: UUID
+    user_id: UUID
+    full_name: str = ""
+    job_title: str | None = None
+    account_role: str = ""
+    role: str
+    note: str | None
+    created_at: datetime

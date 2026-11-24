@@ -6,6 +6,7 @@ from app.models.organisation import (
     ContractingEntity,
     Organisation,
 )
+from app.models.membership import ProjectMember, ProjectRole
 from app.models.project import Project, ProjectStatus
 from app.models.task import ClientVerdict, Task, TaskPriority, TaskStatus
 from app.models.user import User, UserRole
@@ -20,6 +21,8 @@ __all__ = [
     "ContractingEntity",
     "Organisation",
     "Project",
+    "ProjectMember",
+    "ProjectRole",
     "ProjectStatus",
     "Task",
     "TaskPriority",

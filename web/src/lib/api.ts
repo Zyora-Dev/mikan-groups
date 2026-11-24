@@ -214,6 +214,8 @@ export interface Project {
   completed_on: string | null;
   lead_engineer_id: string | null;
   lead_engineer_name: string | null;
+  member_count: number;
+  member_names: string[];
   status: ProjectStatus;
   created_at: string;
   task_count: number;
@@ -221,6 +223,30 @@ export interface Project {
   progress: number;
   overdue_count: number;
   awaiting_client: number;
+}
+
+export type ProjectRole =
+  | "lead" | "engineer" | "detailer" | "checker" | "coordinator" | "support";
+
+export const PROJECT_ROLE_LABELS: Record<ProjectRole, string> = {
+  lead: "Lead",
+  engineer: "Engineer",
+  detailer: "Detailer",
+  checker: "Checker",
+  coordinator: "Coordinator",
+  support: "Support",
+};
+
+export interface ProjectMember {
+  id: string;
+  project_id: string;
+  user_id: string;
+  full_name: string;
+  job_title: string | null;
+  account_role: UserRole;
+  role: ProjectRole;
+  note: string | null;
+  created_at: string;
 }
 
 export interface Task {
@@ -502,6 +528,22 @@ export const api = {
       }),
 
     remove: (id: string) => request<void>(`/projects/${id}`, { method: "DELETE" }),
+
+    members: {
+      list: (projectId: string) =>
+        request<ProjectMember[]>(`/projects/${projectId}/members`),
+
+      add: (projectId: string, user_id: string, role: ProjectRole, note?: string) =>
+        request<ProjectMember>(`/projects/${projectId}/members`, {
+          method: "POST",
+          body: JSON.stringify({ user_id, role, note }),
+        }),
+
+      remove: (projectId: string, memberId: string) =>
+        request<void>(`/projects/${projectId}/members/${memberId}`, {
+          method: "DELETE",
+        }),
+    },
   },
 
   tasks: {
