@@ -5,13 +5,11 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
-  Building2, FolderKanban, History, LayoutDashboard, LogOut, Mail, Menu,
-  Users, X,
+  Building2, FolderKanban, History, LayoutDashboard, Mail, Menu, Users, X,
 } from "lucide-react";
+import { AccountMenu } from "@/components/account-menu";
 import { NotificationBell } from "@/components/notification-bell";
-import { Button } from "@/components/ui/button";
 import { type Session, api } from "@/lib/api";
-import { initials } from "@/lib/project-ui";
 import { cn } from "@/lib/utils";
 
 const MAIN = [
@@ -25,6 +23,18 @@ const MANAGE = [
   { href: "/internal/erp/team/audit", label: "Audit log", Icon: History, adminOnly: false },
   { href: "/internal/erp/team/settings", label: "Email", Icon: Mail, adminOnly: true },
 ];
+
+/** Page title shown in the header, derived from the route. */
+function titleFor(pathname: string | null): string {
+  if (!pathname) return "";
+  const all = [...MAIN, ...MANAGE];
+  const exact = all.find((n) => n.href === pathname);
+  if (exact) return exact.label;
+  const section = all
+    .filter((n) => n.href !== "/internal/erp/team")
+    .find((n) => pathname.startsWith(`${n.href}/`));
+  return section?.label ?? "";
+}
 
 export function TeamShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -48,11 +58,6 @@ export function TeamShell({ children }: { children: React.ReactNode }) {
   }, [router]);
 
   useEffect(() => setNavOpen(false), [pathname]);
-
-  async function signOut() {
-    await api.logout().catch(() => {});
-    router.replace("/internal/erp/team/login");
-  }
 
   if (checking) {
     return (
@@ -82,27 +87,6 @@ export function TeamShell({ children }: { children: React.ReactNode }) {
       {visible.length > 0 && (
         <Section label="Management" items={visible} pathname={pathname} />
       )}
-
-      <div className="mt-auto border-t border-white/10 p-4">
-        <div className="flex items-center gap-2 px-2 py-2">
-          <span className="flex size-9 shrink-0 items-center justify-center border border-brand-green/30 bg-brand-green/10 text-[11px] font-bold text-brand-green">
-            {initials(session.user.full_name)}
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-bold text-white">
-              {session.user.full_name}
-            </p>
-            <p className="truncate text-[11px] font-bold uppercase tracking-wide text-brand-green">
-              {session.user.role}
-            </p>
-          </div>
-          <NotificationBell />
-        </div>
-        <Button onClick={signOut} variant="ghost"
-          className="mt-2 h-10 w-full justify-start rounded-none px-2 text-sm font-semibold text-white/60 hover:bg-white/5 hover:text-white">
-          <LogOut className="mr-2.5 size-4" /> Sign out
-        </Button>
-      </div>
     </nav>
   );
 
@@ -113,7 +97,7 @@ export function TeamShell({ children }: { children: React.ReactNode }) {
         {nav}
       </aside>
 
-      {/* mobile */}
+      {/* mobile drawer */}
       {navOpen && (
         <>
           <button aria-label="Close menu" onClick={() => setNavOpen(false)}
@@ -129,13 +113,23 @@ export function TeamShell({ children }: { children: React.ReactNode }) {
       )}
 
       <div className="lg:pl-60">
-        <header className="flex h-16 items-center gap-4 border-b border-white/10 bg-neutral-900 px-5 lg:hidden">
-          <button onClick={() => setNavOpen(true)} aria-label="Open menu"
-            className="text-white/70 hover:text-white">
-            <Menu className="size-5" />
-          </button>
-          <span className="font-display text-base font-700 uppercase">ERP</span>
-          <span className="ml-auto"><NotificationBell /></span>
+        {/* ---------- page header ---------- */}
+        <header className="sticky top-0 z-30 border-b border-white/10 bg-neutral-950/90 backdrop-blur-md">
+          <div className="mx-auto flex h-16 max-w-[88rem] items-center gap-4 px-5 lg:px-10">
+            <button onClick={() => setNavOpen(true)} aria-label="Open menu"
+              className="text-white/60 transition-colors hover:text-white lg:hidden">
+              <Menu className="size-5" />
+            </button>
+
+            <p className="truncate font-display text-base font-700 uppercase tracking-wide text-white/80">
+              {titleFor(pathname)}
+            </p>
+
+            <div className="ml-auto flex items-center gap-2.5">
+              <NotificationBell />
+              <AccountMenu session={session} />
+            </div>
+          </div>
         </header>
 
         <div className="mx-auto max-w-[88rem] px-5 py-8 lg:px-10 lg:py-10">
