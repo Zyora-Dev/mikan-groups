@@ -24,7 +24,9 @@ from app.models.organisation import Organisation
 from app.models.project import Project, ProjectStatus
 from app.models.task import ClientVerdict, Task, TaskStatus
 from app.models.user import INTERNAL_ROLES, User
-from app.services import storage
+from app.models.audit import AuditAction
+from app.services import notify, storage
+from app.services.audit import record
 from app.schemas.project import (
     ProjectCreate,
     ProjectMemberAdd,
@@ -340,6 +342,17 @@ def create_task(
     session.add(task)
     session.commit()
     session.refresh(task)
+
+    record(
+        session, actor=user, action=AuditAction.CREATED,
+        entity_type="task", entity_id=task.id, entity_label=task.title,
+        organisation_id=task.organisation_id, project_id=project.id,
+        detail="Raised by the client" if from_client else None,
+    )
+    if from_client:
+        notify.task_requested(session, user, task, project)
+    session.commit()
+    session.refresh(task)
     return task
 
 
@@ -355,6 +368,10 @@ def update_task(
     now = datetime.now(timezone.utc)
     if "assignee_id" in data or "checker_id" in data:
         _check_staff(session, user, data.get("assignee_id"), data.get("checker_id"))
+
+    project = session.get(Project, task.project_id)
+    previous_status = task.status
+    previous_assignee = task.assignee_id
 
     new_status = data.get("status")
     if new_status is TaskStatus.SUBMITTED and task.status is not TaskStatus.SUBMITTED:
@@ -372,6 +389,28 @@ def update_task(
     task.updated_at = now
 
     session.add(task)
+
+    if new_status and new_status is not previous_status:
+        record(
+            session, actor=user, action=AuditAction.STATUS_CHANGED,
+            entity_type="task", entity_id=task.id, entity_label=task.title,
+            organisation_id=task.organisation_id, project_id=task.project_id,
+            field="status", old_value=previous_status.value, new_value=new_status.value,
+        )
+        if new_status is TaskStatus.SUBMITTED and project:
+            notify.task_submitted(session, user, task, project)
+
+    if "assignee_id" in data and data["assignee_id"] != previous_assignee:
+        assignee = session.get(User, data["assignee_id"]) if data["assignee_id"] else None
+        record(
+            session, actor=user, action=AuditAction.ASSIGNED,
+            entity_type="task", entity_id=task.id, entity_label=task.title,
+            organisation_id=task.organisation_id, project_id=task.project_id,
+            field="assignee", new_value=assignee.full_name if assignee else "Unassigned",
+        )
+        if assignee and project:
+            notify.task_assigned(session, user, task, project, assignee)
+
     session.commit()
     session.refresh(task)
     return task
@@ -424,6 +463,18 @@ def set_verdict(
             from_client=True,
             is_verdict_note=True,
         ))
+
+    project = session.get(Project, task.project_id)
+    approved = body.verdict is ClientVerdict.APPROVED
+    record(
+        session, actor=user,
+        action=AuditAction.APPROVED if approved else AuditAction.CHANGES_REQUESTED,
+        entity_type="task", entity_id=task.id, entity_label=task.title,
+        organisation_id=task.organisation_id, project_id=task.project_id,
+        field="verdict", new_value=body.verdict.value, detail=body.note,
+    )
+    if project:
+        notify.verdict_given(session, user, task, project, approved, body.note)
 
     session.commit()
     session.refresh(task)
@@ -531,6 +582,12 @@ async def upload_file(
         from_client=not user.is_internal,
     )
     session.add(item)
+    record(
+        session, actor=user, action=AuditAction.FILE_ADDED,
+        entity_type="task", entity_id=task.id, entity_label=task.title,
+        organisation_id=task.organisation_id, project_id=task.project_id,
+        field="file", new_value=item.label,
+    )
     session.commit()
     session.refresh(item)
     return item
@@ -626,6 +683,17 @@ def add_comment(
         from_client=not user.is_internal,
     )
     session.add(comment)
+
+    project = session.get(Project, task.project_id)
+    record(
+        session, actor=user, action=AuditAction.COMMENTED,
+        entity_type="task", entity_id=task.id, entity_label=task.title,
+        organisation_id=task.organisation_id, project_id=task.project_id,
+        detail=comment.body[:500],
+    )
+    if project:
+        notify.comment_added(session, user, task, project, comment.body)
+
     session.commit()
     session.refresh(comment)
     return CommentOut.model_validate(comment).model_copy(
