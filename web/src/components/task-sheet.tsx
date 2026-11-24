@@ -227,12 +227,12 @@ export function TaskSheet({
               <div className="space-y-2">
                 <Label className="text-xs font-bold uppercase tracking-wide text-white/70">Status</Label>
                 <Select value={t.status} onValueChange={(v) => patch({ status: v })} disabled={busy}>
-                  <SelectTrigger className="h-11 rounded-none border-white/15 bg-neutral-950 text-sm font-semibold text-white">
+                  <SelectTrigger className="h-11 rounded-lg border-white/15 bg-neutral-950 text-sm font-semibold text-white">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="rounded-none">
+                  <SelectContent className="rounded-lg">
                     {TEAM_STATUSES.map((s) => (
-                      <SelectItem key={s} value={s} className="rounded-none">
+                      <SelectItem key={s} value={s} >
                         {TASK_STATUS_LABELS[s]}
                       </SelectItem>
                     ))}
@@ -242,12 +242,12 @@ export function TaskSheet({
               <div className="space-y-2">
                 <Label className="text-xs font-bold uppercase tracking-wide text-white/70">Priority</Label>
                 <Select value={t.priority} onValueChange={(v) => patch({ priority: v })} disabled={busy}>
-                  <SelectTrigger className="h-11 rounded-none border-white/15 bg-neutral-950 text-sm font-semibold text-white">
+                  <SelectTrigger className="h-11 rounded-lg border-white/15 bg-neutral-950 text-sm font-semibold text-white">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="rounded-none">
+                  <SelectContent className="rounded-lg">
                     {(Object.keys(PRIORITY_LABELS) as TaskPriority[]).map((p) => (
-                      <SelectItem key={p} value={p} className="rounded-none">
+                      <SelectItem key={p} value={p} >
                         {PRIORITY_LABELS[p]}
                       </SelectItem>
                     ))}
@@ -268,26 +268,26 @@ export function TaskSheet({
               {showVerdict && (
                 <Textarea value={verdictNote} onChange={(e) => setVerdictNote(e.target.value)}
                   rows={3} placeholder={showVerdict === "approved" ? "Any note (optional)" : "What needs changing?"}
-                  className="mt-4 resize-none rounded-none border-white/15 bg-neutral-950 text-sm font-medium text-white" />
+                  className="mt-4 resize-none rounded-lg border-white/15 bg-neutral-950 text-sm font-medium text-white" />
               )}
 
               <div className="mt-4 flex flex-wrap gap-2.5">
                 {showVerdict === null ? (
                   <>
                     <Button onClick={() => setShowVerdict("approved")} disabled={busy}
-                      className="h-11 rounded-none bg-brand-green px-5 text-sm font-bold text-white hover:bg-brand-green/90">
+                      className="h-11 rounded-lg bg-brand-green px-5 text-sm font-bold text-white hover:bg-brand-green/90">
                       <ThumbsUp className="mr-2 size-4" /> Approve
                     </Button>
                     <Button onClick={() => setShowVerdict("changes_requested")} disabled={busy}
                       variant="outline"
-                      className="h-11 rounded-none border-brand-ember/40 bg-transparent px-5 text-sm font-bold text-brand-ember hover:bg-brand-ember/10">
+                      className="h-11 rounded-lg border-brand-ember/40 bg-transparent px-5 text-sm font-bold text-brand-ember hover:bg-brand-ember/10">
                       Request changes
                     </Button>
                   </>
                 ) : (
                   <>
                     <Button onClick={() => submitVerdict(showVerdict)} disabled={busy}
-                      className={cn("h-11 rounded-none px-5 text-sm font-bold text-white",
+                      className={cn("h-11 rounded-lg px-5 text-sm font-bold text-white",
                         showVerdict === "approved"
                           ? "bg-brand-green hover:bg-brand-green/90"
                           : "bg-brand-ember hover:bg-brand-ember/90")}>
@@ -296,7 +296,7 @@ export function TaskSheet({
                     </Button>
                     <Button onClick={() => { setShowVerdict(null); setVerdictNote(""); }}
                       variant="outline" disabled={busy}
-                      className="h-11 rounded-none border-white/20 bg-transparent px-5 text-sm font-bold text-white hover:bg-white/10">
+                      className="h-11 rounded-lg border-white/20 bg-transparent px-5 text-sm font-bold text-white hover:bg-white/10">
                       Cancel
                     </Button>
                   </>
@@ -306,13 +306,13 @@ export function TaskSheet({
           )}
 
           {/* ---- files ---- */}
-          <section className="border border-white/10">
+          <section className="overflow-hidden rounded-xl border border-white/10 bg-neutral-900">
             <div className="flex items-center justify-between border-b border-white/10 p-4">
               <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-white/70">
                 <Paperclip className="size-3.5" /> Files ({files.length})
               </h3>
               <Button onClick={() => setAddFile((v) => !v)} variant="outline"
-                className="h-9 rounded-none border-white/20 bg-transparent px-3 text-xs font-bold text-white hover:bg-white/10">
+                className="h-9 rounded-lg border-white/20 bg-transparent px-3 text-xs font-bold text-white hover:bg-white/10">
                 <Plus className="mr-1.5 size-3.5" /> {isClient ? "Add markup" : "Add file"}
               </Button>
             </div>
@@ -320,32 +320,32 @@ export function TaskSheet({
             {addFile && (
               <form onSubmit={attach} className="space-y-3 border-b border-white/10 bg-neutral-950/50 p-4">
                 <Input name="label" required placeholder="A-101 Rev C"
-                  className="h-11 rounded-none border-white/15 bg-neutral-950 text-sm font-medium text-white" />
+                  className="h-11 rounded-lg border-white/15 bg-neutral-950 text-sm font-medium text-white" />
                 <Input name="url" required type="url" placeholder="https://cloud.mikan-groups.com/…"
-                  className="h-11 rounded-none border-white/15 bg-neutral-950 text-sm font-medium text-white" />
+                  className="h-11 rounded-lg border-white/15 bg-neutral-950 text-sm font-medium text-white" />
                 <div className="grid gap-3 sm:grid-cols-2">
                   <Select name="kind" defaultValue={isClient ? "markup" : "drawing"}>
-                    <SelectTrigger className="h-11 rounded-none border-white/15 bg-neutral-950 text-sm font-medium text-white">
+                    <SelectTrigger className="h-11 rounded-lg border-white/15 bg-neutral-950 text-sm font-medium text-white">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="rounded-none">
+                    <SelectContent className="rounded-lg">
                       {(Object.keys(ATTACHMENT_KIND_LABELS) as AttachmentKind[]).map((k) => (
-                        <SelectItem key={k} value={k} className="rounded-none">
+                        <SelectItem key={k} value={k} >
                           {ATTACHMENT_KIND_LABELS[k]}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                   <Input name="revision" placeholder="Rev C"
-                    className="h-11 rounded-none border-white/15 bg-neutral-950 text-sm font-medium text-white" />
+                    className="h-11 rounded-lg border-white/15 bg-neutral-950 text-sm font-medium text-white" />
                 </div>
                 <div className="flex gap-2.5">
                   <Button type="submit" disabled={busy}
-                    className="h-10 rounded-none bg-brand-green px-5 text-xs font-bold text-white hover:bg-brand-green/90">
+                    className="h-10 rounded-lg bg-brand-green px-5 text-xs font-bold text-white hover:bg-brand-green/90">
                     Add
                   </Button>
                   <Button type="button" variant="outline" onClick={() => setAddFile(false)}
-                    className="h-10 rounded-none border-white/20 bg-transparent px-5 text-xs font-bold text-white hover:bg-white/10">
+                    className="h-10 rounded-lg border-white/20 bg-transparent px-5 text-xs font-bold text-white hover:bg-white/10">
                     Cancel
                   </Button>
                 </div>
@@ -389,7 +389,7 @@ export function TaskSheet({
           </section>
 
           {/* ---- comments ---- */}
-          <section className="border border-white/10">
+          <section className="overflow-hidden rounded-xl border border-white/10 bg-neutral-900">
             <h3 className="flex items-center gap-2 border-b border-white/10 p-4 text-xs font-bold uppercase tracking-wide text-white/70">
               <MessageSquare className="size-3.5" /> Comments ({comments.length})
             </h3>
@@ -429,9 +429,9 @@ export function TaskSheet({
 
             <form onSubmit={postComment} className="flex gap-2.5 border-t border-white/10 p-4">
               <Input name="body" required placeholder="Write a comment…" disabled={busy}
-                className="h-11 flex-1 rounded-none border-white/15 bg-neutral-950 text-sm font-medium text-white" />
+                className="h-11 flex-1 rounded-lg border-white/15 bg-neutral-950 text-sm font-medium text-white" />
               <Button type="submit" disabled={busy} aria-label="Post comment"
-                className="h-11 w-11 shrink-0 rounded-none bg-brand-green p-0 text-white hover:bg-brand-green/90">
+                className="h-11 w-11 shrink-0 rounded-lg bg-brand-green p-0 text-white hover:bg-brand-green/90">
                 {busy ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
               </Button>
             </form>

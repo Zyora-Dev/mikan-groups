@@ -130,7 +130,7 @@ export function ClientPortalAccess({
   }
 
   return (
-    <section className="border border-white/10">
+    <section className="overflow-hidden rounded-xl border border-white/10 bg-neutral-900">
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 p-6">
         <div>
           <h2 className="font-display text-xl font-700 uppercase leading-tight text-white">
@@ -141,7 +141,7 @@ export function ClientPortalAccess({
           </p>
         </div>
         <Button onClick={openAdd}
-          className="h-11 rounded-none bg-brand-green px-5 font-semibold text-white hover:bg-brand-green/90">
+          className="h-11 rounded-lg bg-brand-green px-5 font-semibold text-white hover:bg-brand-green/90">
           <UserPlus className="mr-2.5 size-4" /> Grant access
         </Button>
       </div>
@@ -218,16 +218,16 @@ export function ClientPortalAccess({
 
                   <div className="flex gap-2">
                     <Button onClick={() => resetPassword(u)} variant="outline"
-                      className="h-9 rounded-none border-white/20 bg-transparent px-3 text-xs font-bold text-white hover:bg-white/10">
+                      className="h-9 rounded-lg border-white/20 bg-transparent px-3 text-xs font-bold text-white hover:bg-white/10">
                       <KeyRound className="mr-1.5 size-3.5" /> Reset
                     </Button>
                     <Button onClick={() => toggleActive(u)} variant="outline"
-                      className="h-9 rounded-none border-white/20 bg-transparent px-3 text-xs font-bold text-white hover:bg-white/10">
+                      className="h-9 rounded-lg border-white/20 bg-transparent px-3 text-xs font-bold text-white hover:bg-white/10">
                       {u.is_active ? "Disable" : "Enable"}
                     </Button>
                     <Button onClick={() => setConfirmRemove(u.id)} variant="outline"
                       aria-label={`Remove ${u.full_name}`}
-                      className="h-9 rounded-none border-brand-ember/40 bg-transparent px-3 text-brand-ember hover:bg-brand-ember/10">
+                      className="h-9 rounded-lg border-brand-ember/40 bg-transparent px-3 text-brand-ember hover:bg-brand-ember/10">
                       <Trash2 className="size-3.5" />
                     </Button>
                   </div>
@@ -239,11 +239,11 @@ export function ClientPortalAccess({
                       Remove {u.full_name}&apos;s portal access?
                     </p>
                     <Button onClick={() => remove(u)}
-                      className="h-9 rounded-none bg-brand-ember px-4 text-xs font-bold text-white hover:bg-brand-ember/90">
+                      className="h-9 rounded-lg bg-brand-ember px-4 text-xs font-bold text-white hover:bg-brand-ember/90">
                       Remove
                     </Button>
                     <Button onClick={() => setConfirmRemove(null)} variant="outline"
-                      className="h-9 rounded-none border-white/20 bg-transparent px-4 text-xs font-bold text-white hover:bg-white/10">
+                      className="h-9 rounded-lg border-white/20 bg-transparent px-4 text-xs font-bold text-white hover:bg-white/10">
                       Cancel
                     </Button>
                   </div>
@@ -256,7 +256,7 @@ export function ClientPortalAccess({
 
       {/* ---------- Grant access ---------- */}
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
-        <DialogContent className="rounded-none border-white/10 bg-neutral-900 text-white sm:max-w-lg">
+        <DialogContent className="rounded-xl border-white/10 bg-neutral-900 text-white sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="font-display text-2xl font-700 uppercase">
               Grant portal access
@@ -270,13 +270,13 @@ export function ClientPortalAccess({
           <form onSubmit={onCreate} noValidate className="mt-4 space-y-5">
             <Field id="full_name" label="Full name" required>
               <Input id="full_name" name="full_name" required placeholder="Dale Robertson" disabled={busy}
-                className="h-12 rounded-none border-white/15 bg-neutral-950 text-base font-medium text-white placeholder:text-white/30" />
+                className="h-12 rounded-lg border-white/15 bg-neutral-950 text-base font-medium text-white placeholder:text-white/30" />
             </Field>
 
             <Field id="email" label="Email" required>
               <Input id="email" name="email" type="email" required
                 defaultValue={contactEmail ?? ""} placeholder="name@client.com" disabled={busy}
-                className="h-12 rounded-none border-white/15 bg-neutral-950 text-base font-medium text-white placeholder:text-white/30" />
+                className="h-12 rounded-lg border-white/15 bg-neutral-950 text-base font-medium text-white placeholder:text-white/30" />
               {contactEmail && (
                 <p className="text-xs font-medium text-white/50">
                   Pre-filled from the client contact. Change it if a different
@@ -289,19 +289,19 @@ export function ClientPortalAccess({
               <Field id="role" label="Role" required>
                 <Select name="role" defaultValue="client_admin">
                   <SelectTrigger id="role"
-                    className="h-12 rounded-none border-white/15 bg-neutral-950 text-base font-medium text-white">
+                    className="h-12 rounded-lg border-white/15 bg-neutral-950 text-base font-medium text-white">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="rounded-none">
-                    <SelectItem value="client_admin" className="rounded-none">Client admin</SelectItem>
-                    <SelectItem value="client" className="rounded-none">Client</SelectItem>
+                  <SelectContent className="rounded-lg">
+                    <SelectItem value="client_admin" >Client admin</SelectItem>
+                    <SelectItem value="client" >Client</SelectItem>
                   </SelectContent>
                 </Select>
               </Field>
 
               <Field id="job_title" label="Job title">
                 <Input id="job_title" name="job_title" placeholder="Document Controller" disabled={busy}
-                  className="h-12 rounded-none border-white/15 bg-neutral-950 text-base font-medium text-white placeholder:text-white/30" />
+                  className="h-12 rounded-lg border-white/15 bg-neutral-950 text-base font-medium text-white placeholder:text-white/30" />
               </Field>
             </div>
 
@@ -309,14 +309,14 @@ export function ClientPortalAccess({
               <div className="flex gap-2">
                 <Input id="password" name="password" required value={password}
                   onChange={(e) => setPassword(e.target.value)} disabled={busy}
-                  className="h-12 flex-1 rounded-none border-white/15 bg-neutral-950 text-base font-medium text-white" />
+                  className="h-12 flex-1 rounded-lg border-white/15 bg-neutral-950 text-base font-medium text-white" />
                 <Button type="button" onClick={copyPassword} variant="outline"
                   aria-label="Copy password"
-                  className="h-12 w-12 shrink-0 rounded-none border-white/20 bg-transparent p-0 text-white hover:bg-white/10">
+                  className="h-12 w-12 shrink-0 rounded-lg border-white/20 bg-transparent p-0 text-white hover:bg-white/10">
                   {copied ? <Check className="size-4 text-brand-green" /> : <Copy className="size-4" />}
                 </Button>
                 <Button type="button" onClick={() => setPassword(suggestPassword())} variant="outline"
-                  className="h-12 shrink-0 rounded-none border-white/20 bg-transparent px-3 text-xs font-bold text-white hover:bg-white/10">
+                  className="h-12 shrink-0 rounded-lg border-white/20 bg-transparent px-3 text-xs font-bold text-white hover:bg-white/10">
                   New
                 </Button>
               </div>
@@ -330,11 +330,11 @@ export function ClientPortalAccess({
 
             <div className="flex gap-3 pt-2">
               <Button type="submit" disabled={busy}
-                className="h-12 flex-1 rounded-none bg-brand-green font-semibold text-white hover:bg-brand-green/90 disabled:opacity-60">
+                className="h-12 flex-1 rounded-lg bg-brand-green font-semibold text-white hover:bg-brand-green/90 disabled:opacity-60">
                 {busy ? <>Creating <Loader2 className="ml-2.5 size-4 animate-spin" /></> : "Grant access"}
               </Button>
               <Button type="button" variant="outline" disabled={busy} onClick={() => setAddOpen(false)}
-                className="h-12 rounded-none border-white/20 bg-transparent px-6 font-semibold text-white hover:bg-white/10">
+                className="h-12 rounded-lg border-white/20 bg-transparent px-6 font-semibold text-white hover:bg-white/10">
                 Cancel
               </Button>
             </div>

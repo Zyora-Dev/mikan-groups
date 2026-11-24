@@ -139,7 +139,7 @@ export function ProjectBoard({
   }
 
   return (
-    <section className="border border-white/10">
+    <section className="overflow-hidden rounded-xl border border-white/10 bg-neutral-900">
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 p-6">
         <div>
           <h2 className="font-display text-xl font-700 uppercase leading-tight text-white">
@@ -153,7 +153,7 @@ export function ProjectBoard({
         </div>
         {!isClient && (
           <Button onClick={() => setNewProject(true)}
-            className="h-11 rounded-none bg-brand-green px-5 font-semibold text-white hover:bg-brand-green/90">
+            className="h-11 rounded-lg bg-brand-green px-5 font-semibold text-white hover:bg-brand-green/90">
             <Plus className="mr-2.5 size-4" /> New project
           </Button>
         )}
@@ -240,23 +240,23 @@ export function ProjectBoard({
                           <SelectTrigger className="h-10 w-40 rounded-none border-white/15 bg-neutral-900 text-xs font-bold uppercase text-white">
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent className="rounded-none">
+                          <SelectContent className="rounded-lg">
                             {(Object.keys(PROJECT_STATUS_LABELS) as ProjectStatus[]).map((s) => (
-                              <SelectItem key={s} value={s} className="rounded-none">
+                              <SelectItem key={s} value={s} >
                                 {PROJECT_STATUS_LABELS[s]}
                               </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
                         <Button onClick={() => setNewTaskFor(p.id)} variant="outline"
-                          className="h-10 rounded-none border-white/20 bg-transparent px-4 text-xs font-bold text-white hover:bg-white/10">
+                          className="h-10 rounded-lg border-white/20 bg-transparent px-4 text-xs font-bold text-white hover:bg-white/10">
                           <Plus className="mr-1.5 size-3.5" /> Add task
                         </Button>
                       </div>
                     )}
                     {isClient && (
                       <Button onClick={() => setNewTaskFor(p.id)} variant="outline"
-                        className="mb-4 h-10 rounded-none border-white/20 bg-transparent px-4 text-xs font-bold text-white hover:bg-white/10">
+                        className="mb-4 h-10 rounded-lg border-white/20 bg-transparent px-4 text-xs font-bold text-white hover:bg-white/10">
                         <Plus className="mr-1.5 size-3.5" /> Request work
                       </Button>
                     )}
@@ -355,7 +355,7 @@ export function ProjectBoard({
 
       {/* ---------- new project ---------- */}
       <Dialog open={newProject} onOpenChange={setNewProject}>
-        <DialogContent className="rounded-none border-white/10 bg-neutral-900 text-white sm:max-w-lg">
+        <DialogContent className="rounded-xl border-white/10 bg-neutral-900 text-white sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="font-display text-2xl font-700 uppercase">New project</DialogTitle>
             <DialogDescription className="text-sm font-medium text-white/65">
@@ -374,15 +374,15 @@ export function ProjectBoard({
                 Description
               </Label>
               <Textarea id="description" name="description" rows={3}
-                className="resize-none rounded-none border-white/15 bg-neutral-950 text-sm font-medium text-white" />
+                className="resize-none rounded-lg border-white/15 bg-neutral-950 text-sm font-medium text-white" />
             </div>
             <div className="flex gap-3 pt-1">
               <Button type="submit" disabled={busy}
-                className="h-12 flex-1 rounded-none bg-brand-green font-semibold text-white hover:bg-brand-green/90">
+                className="h-12 flex-1 rounded-lg bg-brand-green font-semibold text-white hover:bg-brand-green/90">
                 {busy ? <Loader2 className="size-4 animate-spin" /> : "Create project"}
               </Button>
               <Button type="button" variant="outline" onClick={() => setNewProject(false)}
-                className="h-12 rounded-none border-white/20 bg-transparent px-6 font-semibold text-white hover:bg-white/10">
+                className="h-12 rounded-lg border-white/20 bg-transparent px-6 font-semibold text-white hover:bg-white/10">
                 Cancel
               </Button>
             </div>
@@ -392,7 +392,7 @@ export function ProjectBoard({
 
       {/* ---------- new task ---------- */}
       <Dialog open={newTaskFor !== null} onOpenChange={(o) => !o && setNewTaskFor(null)}>
-        <DialogContent className="rounded-none border-white/10 bg-neutral-900 text-white sm:max-w-lg">
+        <DialogContent className="rounded-xl border-white/10 bg-neutral-900 text-white sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="font-display text-2xl font-700 uppercase">
               {isClient ? "Request work" : "New task"}
@@ -410,7 +410,7 @@ export function ProjectBoard({
                 Description
               </Label>
               <Textarea id="description" name="description" rows={3}
-                className="resize-none rounded-none border-white/15 bg-neutral-950 text-sm font-medium text-white" />
+                className="resize-none rounded-lg border-white/15 bg-neutral-950 text-sm font-medium text-white" />
             </div>
             <div className="grid gap-5 sm:grid-cols-2">
               <Fld id="due_date" label="Deadline" type="date" />
@@ -420,12 +420,12 @@ export function ProjectBoard({
                 </Label>
                 <Select name="priority" defaultValue="normal">
                   <SelectTrigger id="priority"
-                    className="h-11 rounded-none border-white/15 bg-neutral-950 text-sm font-medium text-white">
+                    className="h-11 rounded-lg border-white/15 bg-neutral-950 text-sm font-medium text-white">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="rounded-none">
+                  <SelectContent className="rounded-lg">
                     {(Object.keys(PRIORITY_LABELS) as TaskPriority[]).map((p) => (
-                      <SelectItem key={p} value={p} className="rounded-none">
+                      <SelectItem key={p} value={p} >
                         {PRIORITY_LABELS[p]}
                       </SelectItem>
                     ))}
@@ -435,11 +435,11 @@ export function ProjectBoard({
             </div>
             <div className="flex gap-3 pt-1">
               <Button type="submit" disabled={busy}
-                className="h-12 flex-1 rounded-none bg-brand-green font-semibold text-white hover:bg-brand-green/90">
+                className="h-12 flex-1 rounded-lg bg-brand-green font-semibold text-white hover:bg-brand-green/90">
                 {busy ? <Loader2 className="size-4 animate-spin" /> : isClient ? "Send request" : "Create task"}
               </Button>
               <Button type="button" variant="outline" onClick={() => setNewTaskFor(null)}
-                className="h-12 rounded-none border-white/20 bg-transparent px-6 font-semibold text-white hover:bg-white/10">
+                className="h-12 rounded-lg border-white/20 bg-transparent px-6 font-semibold text-white hover:bg-white/10">
                 Cancel
               </Button>
             </div>
@@ -459,7 +459,7 @@ function Fld({
         {label}{required && <span className="ml-1 text-brand-green">*</span>}
       </Label>
       <Input id={id} name={id} type={type} required={required} placeholder={placeholder}
-        className="h-11 rounded-none border-white/15 bg-neutral-950 text-sm font-medium text-white placeholder:text-white/30" />
+        className="h-11 rounded-lg border-white/15 bg-neutral-950 text-sm font-medium text-white placeholder:text-white/30" />
     </div>
   );
 }

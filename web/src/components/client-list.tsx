@@ -108,7 +108,7 @@ export function ClientList() {
           </p>
         </div>
         <Button onClick={() => { setFormError(null); setAddOpen(true); }}
-          className="h-12 rounded-none bg-brand-green px-6 font-semibold text-white hover:bg-brand-green/90">
+          className="h-12 rounded-lg bg-brand-green px-6 font-semibold text-white hover:bg-brand-green/90">
           <Plus className="mr-2.5 size-4" /> Onboard client
         </Button>
       </div>
@@ -130,7 +130,7 @@ export function ClientList() {
           <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-white/40" />
           <Input value={search} onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by name"
-            className="h-11 rounded-none border-white/15 bg-neutral-900 pl-11 text-base font-medium text-white placeholder:text-white/35" />
+            className="h-11 rounded-lg border-white/15 bg-neutral-900 pl-11 text-base font-medium text-white placeholder:text-white/35" />
         </div>
         <div className="flex gap-2">
           {FILTERS.map((f) => (
@@ -221,7 +221,7 @@ export function ClientList() {
 
       {/* ---------- Onboard ---------- */}
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
-        <DialogContent className="rounded-none border-white/10 bg-neutral-900 text-white sm:max-w-lg">
+        <DialogContent className="rounded-xl border-white/10 bg-neutral-900 text-white sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="font-display text-2xl font-700 uppercase">
               Onboard client
@@ -236,19 +236,19 @@ export function ClientList() {
             <Field id="name" label="Legal name" required>
               <Input id="name" name="name" required placeholder="Pacific Steel Fabricators Pty Ltd"
                 disabled={busy}
-                className="h-12 rounded-none border-white/15 bg-neutral-950 text-base font-medium text-white placeholder:text-white/30" />
+                className="h-12 rounded-lg border-white/15 bg-neutral-950 text-base font-medium text-white placeholder:text-white/30" />
             </Field>
 
             <div className="grid gap-5 sm:grid-cols-2">
               <Field id="client_type" label="Client type" required>
                 <Select name="client_type" defaultValue="main_contractor">
                   <SelectTrigger id="client_type"
-                    className="h-12 rounded-none border-white/15 bg-neutral-950 text-base font-medium text-white">
+                    className="h-12 rounded-lg border-white/15 bg-neutral-950 text-base font-medium text-white">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="rounded-none">
+                  <SelectContent className="rounded-lg">
                     {Object.entries(CLIENT_TYPE_LABELS).map(([v, label]) => (
-                      <SelectItem key={v} value={v} className="rounded-none">{label}</SelectItem>
+                      <SelectItem key={v} value={v} >{label}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -256,7 +256,7 @@ export function ClientList() {
 
               <Field id="country" label="Country" required>
                 <Input id="country" name="country" required placeholder="Australia" disabled={busy}
-                  className="h-12 rounded-none border-white/15 bg-neutral-950 text-base font-medium text-white placeholder:text-white/30" />
+                  className="h-12 rounded-lg border-white/15 bg-neutral-950 text-base font-medium text-white placeholder:text-white/30" />
               </Field>
             </div>
 
@@ -264,12 +264,12 @@ export function ClientList() {
               <Field id="contracting_entity" label="Contracting entity" required>
                 <Select name="contracting_entity" defaultValue="singapore">
                   <SelectTrigger id="contracting_entity"
-                    className="h-12 rounded-none border-white/15 bg-neutral-950 text-base font-medium text-white">
+                    className="h-12 rounded-lg border-white/15 bg-neutral-950 text-base font-medium text-white">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="rounded-none">
+                  <SelectContent className="rounded-lg">
                     {Object.entries(ENTITY_LABELS).map(([v, label]) => (
-                      <SelectItem key={v} value={v} className="rounded-none">{label}</SelectItem>
+                      <SelectItem key={v} value={v} >{label}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -278,14 +278,14 @@ export function ClientList() {
               <Field id="default_standard" label="Default standard">
                 <Input id="default_standard" name="default_standard" placeholder="AS/NZS 5131"
                   disabled={busy}
-                  className="h-12 rounded-none border-white/15 bg-neutral-950 text-base font-medium text-white placeholder:text-white/30" />
+                  className="h-12 rounded-lg border-white/15 bg-neutral-950 text-base font-medium text-white placeholder:text-white/30" />
               </Field>
             </div>
 
             <Field id="contact_email" label="Primary contact email">
               <Input id="contact_email" name="contact_email" type="email"
                 placeholder="ops@client.com" disabled={busy}
-                className="h-12 rounded-none border-white/15 bg-neutral-950 text-base font-medium text-white placeholder:text-white/30" />
+                className="h-12 rounded-lg border-white/15 bg-neutral-950 text-base font-medium text-white placeholder:text-white/30" />
             </Field>
 
             {formError && (
@@ -297,12 +297,12 @@ export function ClientList() {
 
             <div className="flex gap-3 pt-2">
               <Button type="submit" disabled={busy}
-                className="h-12 flex-1 rounded-none bg-brand-green font-semibold text-white hover:bg-brand-green/90 disabled:opacity-60">
+                className="h-12 flex-1 rounded-lg bg-brand-green font-semibold text-white hover:bg-brand-green/90 disabled:opacity-60">
                 {busy ? (<>Creating <Loader2 className="ml-2.5 size-4 animate-spin" /></>)
                       : (<><Building2 className="mr-2.5 size-4" /> Create client</>)}
               </Button>
               <Button type="button" variant="outline" disabled={busy} onClick={() => setAddOpen(false)}
-                className="h-12 rounded-none border-white/20 bg-transparent px-6 font-semibold text-white hover:bg-white/10">
+                className="h-12 rounded-lg border-white/20 bg-transparent px-6 font-semibold text-white hover:bg-white/10">
                 Cancel
               </Button>
             </div>

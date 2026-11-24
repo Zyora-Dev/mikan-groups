@@ -118,7 +118,7 @@ export function TeamMembers() {
         </div>
         <Button
           onClick={() => { setFormError(null); setAddOpen(true); }}
-          className="group h-12 rounded-none bg-brand-green px-6 font-semibold text-white hover:bg-brand-green/90"
+          className="group h-12 rounded-lg bg-brand-green px-6 font-semibold text-white hover:bg-brand-green/90"
         >
           <UserPlus className="mr-2.5 size-4" /> Add member
         </Button>
@@ -206,12 +206,12 @@ export function TeamMembers() {
                   <div className="flex gap-2">
                     {locked && (
                       <Button onClick={() => unlock(m)} variant="outline"
-                        className="h-10 rounded-none border-white/20 bg-transparent px-3.5 text-xs font-bold text-white hover:bg-white/10">
+                        className="h-10 rounded-lg border-white/20 bg-transparent px-3.5 text-xs font-bold text-white hover:bg-white/10">
                         Unlock
                       </Button>
                     )}
                     <Button onClick={() => toggleActive(m)} variant="outline"
-                      className="h-10 rounded-none border-white/20 bg-transparent px-3.5 text-xs font-bold text-white hover:bg-white/10">
+                      className="h-10 rounded-lg border-white/20 bg-transparent px-3.5 text-xs font-bold text-white hover:bg-white/10">
                       {m.is_active ? "Disable" : "Enable"}
                     </Button>
                   </div>
@@ -224,7 +224,7 @@ export function TeamMembers() {
 
       {/* ---------- Add member ---------- */}
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
-        <DialogContent className="rounded-none border-white/10 bg-neutral-900 text-white sm:max-w-lg">
+        <DialogContent className="rounded-xl border-white/10 bg-neutral-900 text-white sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="font-display text-2xl font-700 uppercase">
               Add team member
@@ -238,38 +238,38 @@ export function TeamMembers() {
           <form onSubmit={onCreate} noValidate className="mt-4 space-y-5">
             <Field id="full_name" label="Full name" required>
               <Input id="full_name" name="full_name" placeholder="Anvanto Joseph" disabled={busy}
-                className="h-12 rounded-none border-white/15 bg-neutral-950 text-base font-medium text-white placeholder:text-white/30" />
+                className="h-12 rounded-lg border-white/15 bg-neutral-950 text-base font-medium text-white placeholder:text-white/30" />
             </Field>
 
             <Field id="email" label="Email" required>
               <Input id="email" name="email" type="email" placeholder="name@mikan-groups.com" disabled={busy}
-                className="h-12 rounded-none border-white/15 bg-neutral-950 text-base font-medium text-white placeholder:text-white/30" />
+                className="h-12 rounded-lg border-white/15 bg-neutral-950 text-base font-medium text-white placeholder:text-white/30" />
             </Field>
 
             <div className="grid gap-5 sm:grid-cols-2">
               <Field id="role" label="Role" required>
                 <Select name="role" defaultValue="engineer">
                   <SelectTrigger id="role"
-                    className="h-12 rounded-none border-white/15 bg-neutral-950 text-base font-medium text-white">
+                    className="h-12 rounded-lg border-white/15 bg-neutral-950 text-base font-medium text-white">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="rounded-none">
-                    <SelectItem value="engineer" className="rounded-none">Engineer</SelectItem>
-                    <SelectItem value="admin" className="rounded-none">Administrator</SelectItem>
+                  <SelectContent className="rounded-lg">
+                    <SelectItem value="engineer" >Engineer</SelectItem>
+                    <SelectItem value="admin" >Administrator</SelectItem>
                   </SelectContent>
                 </Select>
               </Field>
 
               <Field id="job_title" label="Job title">
                 <Input id="job_title" name="job_title" placeholder="Steel Detailer" disabled={busy}
-                  className="h-12 rounded-none border-white/15 bg-neutral-950 text-base font-medium text-white placeholder:text-white/30" />
+                  className="h-12 rounded-lg border-white/15 bg-neutral-950 text-base font-medium text-white placeholder:text-white/30" />
               </Field>
             </div>
 
             <Field id="password" label="Temporary password" required>
               <Input id="password" name="password" type="text" autoComplete="new-password"
                 placeholder="At least 10 characters" disabled={busy}
-                className="h-12 rounded-none border-white/15 bg-neutral-950 text-base font-medium text-white placeholder:text-white/30" />
+                className="h-12 rounded-lg border-white/15 bg-neutral-950 text-base font-medium text-white placeholder:text-white/30" />
               <p className="text-xs font-medium text-white/50">
                 Shown in plain text so you can pass it on. Mix letters with
                 numbers or symbols.
@@ -285,13 +285,13 @@ export function TeamMembers() {
 
             <div className="flex gap-3 pt-2">
               <Button type="submit" disabled={busy}
-                className="h-12 flex-1 rounded-none bg-brand-green font-semibold text-white hover:bg-brand-green/90 disabled:opacity-60">
+                className="h-12 flex-1 rounded-lg bg-brand-green font-semibold text-white hover:bg-brand-green/90 disabled:opacity-60">
                 {busy ? (<>Creating <Loader2 className="ml-2.5 size-4 animate-spin" /></>)
                       : (<><ShieldCheck className="mr-2.5 size-4" /> Create account</>)}
               </Button>
               <Button type="button" variant="outline" disabled={busy}
                 onClick={() => setAddOpen(false)}
-                className="h-12 rounded-none border-white/20 bg-transparent px-6 font-semibold text-white hover:bg-white/10">
+                className="h-12 rounded-lg border-white/20 bg-transparent px-6 font-semibold text-white hover:bg-white/10">
                 Cancel
               </Button>
             </div>

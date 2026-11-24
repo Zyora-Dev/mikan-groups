@@ -87,7 +87,7 @@ export function TeamLogin() {
                 <Mail className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-white/40" />
                 <Input id="email" name="email" type="email" autoComplete="username"
                   placeholder="you@mikan-groups.com" disabled={busy}
-                  className="h-13 rounded-none border-white/15 bg-neutral-950 pl-11 text-base font-medium text-white placeholder:text-white/35 focus-visible:border-brand-green" />
+                  className="h-13 rounded-lg border-white/15 bg-neutral-950 pl-11 text-base font-medium text-white placeholder:text-white/35 focus-visible:border-brand-green" />
               </div>
             </div>
 
@@ -99,7 +99,7 @@ export function TeamLogin() {
                 <Lock className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-white/40" />
                 <Input id="password" name="password" autoComplete="current-password"
                   type={reveal ? "text" : "password"} placeholder="Enter password" disabled={busy}
-                  className="h-13 rounded-none border-white/15 bg-neutral-950 px-11 text-base font-medium text-white placeholder:text-white/35 focus-visible:border-brand-green" />
+                  className="h-13 rounded-lg border-white/15 bg-neutral-950 px-11 text-base font-medium text-white placeholder:text-white/35 focus-visible:border-brand-green" />
                 <button type="button" onClick={() => setReveal((r) => !r)}
                   aria-label={reveal ? "Hide password" : "Show password"}
                   className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-white/45 transition-colors hover:text-white">
@@ -115,7 +115,7 @@ export function TeamLogin() {
             )}
 
             <Button type="submit" disabled={busy}
-              className="group h-13 w-full rounded-none bg-brand-green text-base font-semibold text-white hover:bg-brand-green/90 disabled:opacity-60">
+              className="group h-13 w-full rounded-lg bg-brand-green text-base font-semibold text-white hover:bg-brand-green/90 disabled:opacity-60">
               {busy ? (
                 <>Signing in <Loader2 className="ml-3 size-4 animate-spin" /></>
               ) : (
