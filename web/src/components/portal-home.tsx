@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
   AlertTriangle, ArrowUpRight, CheckCircle2, ClipboardList, Clock,
-  FileText, FolderKanban, Inbox, Loader2, MessageSquare, Paperclip,
+  FileText, FolderKanban, Inbox, Link2, Loader2, MessageSquare, Paperclip,
   RefreshCw, ThumbsUp,
 } from "lucide-react";
 import { DeadlineBars, StatusDonut, ThroughputChart } from "@/components/dash-charts";
@@ -408,14 +408,19 @@ function FileList({ rows }: { rows: PortalFile[] }) {
       {rows.map((f) => (
         <li key={f.id} className="flex items-center gap-3 px-5 py-3">
           <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white/[0.06]">
-            <FileText className="size-4 text-white/50" />
+            {f.has_file
+              ? <FileText className="size-4 text-white/50" />
+              : <Link2 className="size-4 text-brand-cyan/70" />}
           </span>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-bold text-white">{f.label}</p>
             <p className="mt-0.5 truncate text-xs font-medium text-white/45">
               {f.job_number}
               {f.revision && ` · ${revLabel(f.revision)}`}
-              {f.size_bytes && ` · ${fileSize(f.size_bytes)}`}
+              {" · "}
+              {f.has_file
+                ? (f.size_bytes ? fileSize(f.size_bytes) : "File")
+                : "Link"}
             </p>
           </div>
           {f.has_file ? (

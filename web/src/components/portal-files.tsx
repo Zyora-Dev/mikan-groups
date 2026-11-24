@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
-  Download, ExternalLink, FileText, Loader2, Paperclip, Search,
+  Download, ExternalLink, FileText, Link2, Loader2, Paperclip, Search,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -13,6 +13,7 @@ import { KIND_STYLE, fileSize, formatDateTime, revLabel } from "@/lib/project-ui
 import { cn } from "@/lib/utils";
 
 type Source = "all" | "mikan" | "ours";
+type Where = "all" | "uploaded" | "linked";
 
 export function PortalFiles() {
   const [rows, setRows] = useState<PortalFile[] | null>(null);
@@ -20,6 +21,7 @@ export function PortalFiles() {
   const [search, setSearch] = useState("");
   const [kind, setKind] = useState<"all" | AttachmentKind>("all");
   const [source, setSource] = useState<Source>("all");
+  const [where, setWhere] = useState<Where>("all");
 
   useEffect(() => {
     api.portal.files()
@@ -34,6 +36,8 @@ export function PortalFiles() {
       if (kind !== "all" && f.kind !== kind) return false;
       if (source === "mikan" && f.from_client) return false;
       if (source === "ours" && !f.from_client) return false;
+      if (where === "uploaded" && !f.has_file) return false;
+      if (where === "linked" && f.has_file) return false;
       if (!q) return true;
       return (
         f.label.toLowerCase().includes(q) ||
@@ -43,7 +47,7 @@ export function PortalFiles() {
         f.task_title.toLowerCase().includes(q)
       );
     });
-  }, [rows, search, kind, source]);
+  }, [rows, search, kind, source, where]);
 
   if (error) {
     return (
@@ -75,7 +79,7 @@ export function PortalFiles() {
       </header>
 
       {/* filters */}
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
         <div className="flex flex-wrap gap-1.5">
           {([
             { v: "all", l: "All" },
@@ -93,6 +97,26 @@ export function PortalFiles() {
             </button>
           ))}
         </div>
+
+        {rows.some((f) => f.has_file) && rows.some((f) => !f.has_file) && (
+          <div className="flex flex-wrap gap-1.5">
+            {([
+              { v: "all", l: "Any source" },
+              { v: "uploaded", l: "Uploaded" },
+              { v: "linked", l: "Links" },
+            ] as { v: Where; l: string }[]).map((w) => (
+              <button key={w.v} type="button" onClick={() => setWhere(w.v)}
+                className={cn(
+                  "rounded-full px-3.5 py-1.5 text-xs font-bold transition-colors",
+                  where === w.v
+                    ? "bg-white/15 text-white"
+                    : "bg-white/[0.06] text-white/60 hover:bg-white/10 hover:text-white"
+                )}>
+                {w.l}
+              </button>
+            ))}
+          </div>
+        )}
 
         {kinds.length > 1 && (
           <div className="flex flex-wrap gap-1.5">
@@ -119,12 +143,13 @@ export function PortalFiles() {
           </div>
         )}
 
-        <div className="relative ml-auto w-full sm:w-64">
-          <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-white/35" />
-          <Input value={search} onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search files"
-            className="h-10 rounded-lg border-white/10 bg-white/[0.04] pl-10 text-sm font-medium text-white placeholder:text-white/35" />
-        </div>
+      </div>
+
+      <div className="relative w-full sm:max-w-xs">
+        <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-white/35" />
+        <Input value={search} onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search files"
+          className="h-10 rounded-lg border-white/10 bg-white/[0.04] pl-10 text-sm font-medium text-white placeholder:text-white/35" />
       </div>
 
       {shown.length === 0 ? (
@@ -146,7 +171,9 @@ export function PortalFiles() {
               <li key={f.id}
                 className="flex flex-wrap items-center gap-4 px-5 py-4 transition-colors hover:bg-white/[0.03]">
                 <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-white/[0.06]">
-                  <FileText className="size-4 text-white/50" />
+                  {f.has_file
+                    ? <FileText className="size-4 text-white/50" />
+                    : <Link2 className="size-4 text-brand-cyan/70" />}
                 </span>
 
                 <div className="min-w-0 flex-1">
@@ -176,7 +203,10 @@ export function PortalFiles() {
                       {f.job_number}
                     </Link>
                     {" · "}{f.task_title}
-                    {f.size_bytes ? ` · ${fileSize(f.size_bytes)}` : ""}
+                    {" · "}
+                    {f.has_file
+                      ? (f.size_bytes ? fileSize(f.size_bytes) : "File")
+                      : "Shared link"}
                   </p>
                   <p className="mt-0.5 text-[11px] font-medium text-white/30">
                     {formatDateTime(f.created_at)}
