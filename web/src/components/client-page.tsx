@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ClientPortalAccess } from "@/components/client-portal-access";
+import { ProjectBoard } from "@/components/project-board";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -233,6 +234,9 @@ export function ClientPage({ clientId }: { clientId: string }) {
         contactEmail={client.contact_email}
         onChanged={() => void load()}
       />
+
+      {/* ---- projects ---- */}
+      <ProjectBoard clientId={client.id} />
 
       {/* ---- details ---- */}
       {editing ? (

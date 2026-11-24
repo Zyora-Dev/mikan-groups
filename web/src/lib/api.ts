@@ -174,6 +174,119 @@ export const ENTITY_LABELS: Record<ContractingEntity, string> = {
   india: "India",
 };
 
+// ---------------------------------------------------------------- projects
+
+export type ProjectStatus = "planning" | "active" | "on_hold" | "completed" | "cancelled";
+export type TaskStatus = "requested" | "todo" | "in_progress" | "in_review" | "submitted" | "done";
+export type ClientVerdict = "none" | "awaiting" | "approved" | "changes_requested";
+export type TaskPriority = "low" | "normal" | "high" | "urgent";
+export type AttachmentKind = "drawing" | "model" | "markup" | "reference" | "other";
+
+export interface Project {
+  id: string;
+  organisation_id: string;
+  job_number: string;
+  title: string;
+  description: string | null;
+  discipline: string | null;
+  standard: string | null;
+  start_date: string | null;
+  target_date: string | null;
+  completed_on: string | null;
+  lead_engineer_id: string | null;
+  status: ProjectStatus;
+  created_at: string;
+  task_count: number;
+  done_count: number;
+  progress: number;
+  overdue_count: number;
+  awaiting_client: number;
+}
+
+export interface Task {
+  id: string;
+  project_id: string;
+  title: string;
+  description: string | null;
+  status: TaskStatus;
+  verdict: ClientVerdict;
+  priority: TaskPriority;
+  progress: number;
+  due_date: string | null;
+  assignee_id: string | null;
+  checker_id: string | null;
+  raised_by_client: boolean;
+  submitted_at: string | null;
+  completed_at: string | null;
+  created_at: string;
+  comment_count: number;
+  attachment_count: number;
+}
+
+export interface Attachment {
+  id: string;
+  task_id: string;
+  label: string;
+  url: string;
+  kind: AttachmentKind;
+  revision: string | null;
+  note: string | null;
+  uploaded_by_id: string | null;
+  from_client: boolean;
+  created_at: string;
+}
+
+export interface TaskComment {
+  id: string;
+  task_id: string;
+  body: string;
+  author_id: string;
+  author_name: string;
+  from_client: boolean;
+  is_verdict_note: boolean;
+  created_at: string;
+  edited_at: string | null;
+}
+
+export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
+  planning: "Planning",
+  active: "Active",
+  on_hold: "On hold",
+  completed: "Completed",
+  cancelled: "Cancelled",
+};
+
+export const TASK_STATUS_LABELS: Record<TaskStatus, string> = {
+  requested: "Requested",
+  todo: "To do",
+  in_progress: "In progress",
+  in_review: "In check",
+  submitted: "Submitted",
+  done: "Done",
+};
+
+export const VERDICT_LABELS: Record<ClientVerdict, string> = {
+  none: "—",
+  awaiting: "Awaiting client",
+  approved: "Approved",
+  changes_requested: "Changes requested",
+};
+
+export const PRIORITY_LABELS: Record<TaskPriority, string> = {
+  low: "Low",
+  normal: "Normal",
+  high: "High",
+  urgent: "Urgent",
+};
+
+export const ATTACHMENT_KIND_LABELS: Record<AttachmentKind, string> = {
+  drawing: "Drawing",
+  model: "Model",
+  markup: "Markup",
+  reference: "Reference",
+  other: "Other",
+};
+
 export const api = {
   /** `internal` restricts the attempt to Mikan staff accounts. */
   login: (email: string, password: string, internal = false) =>
@@ -274,6 +387,73 @@ export const api = {
 
       remove: (clientId: string, userId: string) =>
         request<void>(`/clients/${clientId}/users/${userId}`, { method: "DELETE" }),
+    },
+  },
+
+  projects: {
+    list: (params?: { client_id?: string; status?: ProjectStatus }) => {
+      const q = new URLSearchParams();
+      if (params?.client_id) q.set("client_id", params.client_id);
+      if (params?.status) q.set("status", params.status);
+      const qs = q.toString();
+      return request<Project[]>(`/projects${qs ? `?${qs}` : ""}`);
+    },
+
+    get: (id: string) => request<Project>(`/projects/${id}`),
+
+    create: (clientId: string, body: Record<string, unknown>) =>
+      request<Project>(`/clients/${clientId}/projects`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+
+    update: (id: string, body: Record<string, unknown>) =>
+      request<Project>(`/projects/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      }),
+
+    remove: (id: string) => request<void>(`/projects/${id}`, { method: "DELETE" }),
+  },
+
+  tasks: {
+    list: (projectId: string) => request<Task[]>(`/projects/${projectId}/tasks`),
+
+    create: (projectId: string, body: Record<string, unknown>) =>
+      request<Task>(`/projects/${projectId}/tasks`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+
+    update: (id: string, body: Record<string, unknown>) =>
+      request<Task>(`/tasks/${id}`, { method: "PATCH", body: JSON.stringify(body) }),
+
+    setVerdict: (id: string, verdict: ClientVerdict, note?: string) =>
+      request<Task>(`/tasks/${id}/verdict`, {
+        method: "POST",
+        body: JSON.stringify({ verdict, note }),
+      }),
+
+    remove: (id: string) => request<void>(`/tasks/${id}`, { method: "DELETE" }),
+
+    attachments: {
+      list: (taskId: string) => request<Attachment[]>(`/tasks/${taskId}/attachments`),
+      add: (taskId: string, body: Record<string, unknown>) =>
+        request<Attachment>(`/tasks/${taskId}/attachments`, {
+          method: "POST",
+          body: JSON.stringify(body),
+        }),
+      remove: (id: string) =>
+        request<void>(`/attachments/${id}`, { method: "DELETE" }),
+    },
+
+    comments: {
+      list: (taskId: string) => request<TaskComment[]>(`/tasks/${taskId}/comments`),
+      add: (taskId: string, body: string) =>
+        request<TaskComment>(`/tasks/${taskId}/comments`, {
+          method: "POST",
+          body: JSON.stringify({ body }),
+        }),
     },
   },
 };
