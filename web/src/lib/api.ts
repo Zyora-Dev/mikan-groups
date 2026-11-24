@@ -391,6 +391,84 @@ export interface Dashboard {
   has_history: boolean;
 }
 
+// ------------------------------------------------- notifications & audit
+
+export interface EmailSettings {
+  provider: string;
+  enabled: boolean;
+  api_url: string;
+  api_key_set: boolean;
+  from_email: string | null;
+  from_name: string;
+  reply_to: string | null;
+  notify_on_submit: boolean;
+  notify_on_verdict: boolean;
+  notify_on_comment: boolean;
+  notify_on_assignment: boolean;
+  notify_on_task_created: boolean;
+  last_tested_at: string | null;
+  last_test_ok: boolean | null;
+  last_error: string | null;
+  updated_at: string;
+}
+
+export interface AppNotification {
+  id: string;
+  title: string;
+  body: string | null;
+  entity_type: string;
+  entity_id: string | null;
+  project_id: string | null;
+  link: string | null;
+  read_at: string | null;
+  emailed_at: string | null;
+  created_at: string;
+}
+
+export type AuditAction =
+  | "created" | "updated" | "deleted" | "status_changed" | "submitted"
+  | "approved" | "changes_requested" | "assigned" | "member_added"
+  | "member_removed" | "file_added" | "file_removed" | "commented"
+  | "signed_in" | "access_granted" | "access_revoked" | "password_reset";
+
+export interface AuditEntry {
+  id: string;
+  actor_name: string;
+  actor_is_client: boolean;
+  action: AuditAction;
+  entity_type: string;
+  entity_id: string | null;
+  entity_label: string;
+  field: string | null;
+  old_value: string | null;
+  new_value: string | null;
+  detail: string | null;
+  organisation_id: string | null;
+  client_name: string | null;
+  project_id: string | null;
+  created_at: string;
+}
+
+export const AUDIT_LABELS: Record<AuditAction, string> = {
+  created: "Created",
+  updated: "Updated",
+  deleted: "Deleted",
+  status_changed: "Status changed",
+  submitted: "Submitted",
+  approved: "Approved",
+  changes_requested: "Changes requested",
+  assigned: "Assigned",
+  member_added: "Member added",
+  member_removed: "Member removed",
+  file_added: "File added",
+  file_removed: "File removed",
+  commented: "Commented",
+  signed_in: "Signed in",
+  access_granted: "Access granted",
+  access_revoked: "Access revoked",
+  password_reset: "Password reset",
+};
+
 export const api = {
   /** `internal` restricts the attempt to Mikan staff accounts. */
   login: (email: string, password: string, internal = false) =>
@@ -404,6 +482,40 @@ export const api = {
   me: () => request<Session>("/auth/me"),
 
   dashboard: () => request<Dashboard>("/dashboard"),
+
+  notifications: {
+    list: (unreadOnly = false) =>
+      request<AppNotification[]>(`/notifications${unreadOnly ? "?unread_only=true" : ""}`),
+    count: () => request<{ unread: number }>("/notifications/count"),
+    markRead: (id: string) =>
+      request<void>(`/notifications/${id}/read`, { method: "POST" }),
+    markAllRead: () =>
+      request<void>("/notifications/read-all", { method: "POST" }),
+  },
+
+  audit: (params?: { client_id?: string; project_id?: string; entity_id?: string; limit?: number }) => {
+    const q = new URLSearchParams();
+    if (params?.client_id) q.set("client_id", params.client_id);
+    if (params?.project_id) q.set("project_id", params.project_id);
+    if (params?.entity_id) q.set("entity_id", params.entity_id);
+    if (params?.limit) q.set("limit", String(params.limit));
+    const qs = q.toString();
+    return request<AuditEntry[]>(`/audit${qs ? `?${qs}` : ""}`);
+  },
+
+  emailSettings: {
+    get: () => request<EmailSettings>("/settings/email"),
+    update: (body: Record<string, unknown>) =>
+      request<EmailSettings>("/settings/email", {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      }),
+    test: (to_email: string) =>
+      request<EmailSettings>("/settings/email/test", {
+        method: "POST",
+        body: JSON.stringify({ to_email }),
+      }),
+  },
 
   changePassword: (current_password: string, new_password: string) =>
     request<void>("/auth/password", {

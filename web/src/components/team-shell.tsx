@@ -5,8 +5,10 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
-  Building2, FolderKanban, LayoutDashboard, LogOut, Menu, Users, X,
+  Building2, FolderKanban, History, LayoutDashboard, LogOut, Mail, Menu,
+  Users, X,
 } from "lucide-react";
+import { NotificationBell } from "@/components/notification-bell";
 import { Button } from "@/components/ui/button";
 import { type Session, api } from "@/lib/api";
 import { initials } from "@/lib/project-ui";
@@ -20,6 +22,8 @@ const MAIN = [
 
 const MANAGE = [
   { href: "/internal/erp/team/members", label: "Team", Icon: Users, adminOnly: true },
+  { href: "/internal/erp/team/audit", label: "Audit log", Icon: History, adminOnly: false },
+  { href: "/internal/erp/team/settings", label: "Email", Icon: Mail, adminOnly: true },
 ];
 
 export function TeamShell({ children }: { children: React.ReactNode }) {
@@ -80,7 +84,7 @@ export function TeamShell({ children }: { children: React.ReactNode }) {
       )}
 
       <div className="mt-auto border-t border-white/10 p-4">
-        <div className="flex items-center gap-3 px-2 py-2">
+        <div className="flex items-center gap-2 px-2 py-2">
           <span className="flex size-9 shrink-0 items-center justify-center border border-brand-green/30 bg-brand-green/10 text-[11px] font-bold text-brand-green">
             {initials(session.user.full_name)}
           </span>
@@ -92,6 +96,7 @@ export function TeamShell({ children }: { children: React.ReactNode }) {
               {session.user.role}
             </p>
           </div>
+          <NotificationBell />
         </div>
         <Button onClick={signOut} variant="ghost"
           className="mt-2 h-10 w-full justify-start rounded-none px-2 text-sm font-semibold text-white/60 hover:bg-white/5 hover:text-white">
@@ -130,6 +135,7 @@ export function TeamShell({ children }: { children: React.ReactNode }) {
             <Menu className="size-5" />
           </button>
           <span className="font-display text-base font-700 uppercase">ERP</span>
+          <span className="ml-auto"><NotificationBell /></span>
         </header>
 
         <div className="mx-auto max-w-[88rem] px-5 py-8 lg:px-10 lg:py-10">
