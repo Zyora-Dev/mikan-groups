@@ -96,6 +96,7 @@ export function ProjectTeam({
         <div className="space-y-3 border-t border-white/[0.07] bg-neutral-950/50 p-4">
           <div className="grid gap-3 sm:grid-cols-[1.4fr_1fr]">
             <AssigneePicker value={pickUser} onChange={setPickUser}
+              exclude={members.map((m) => m.user_id)}
               placeholder="Choose a team member" />
             <Select value={pickRole} onValueChange={(v) => setPickRole(v as ProjectRole)}>
               <SelectTrigger aria-label="Project role"

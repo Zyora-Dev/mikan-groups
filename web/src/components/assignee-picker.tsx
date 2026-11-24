@@ -27,15 +27,21 @@ export function useAssignable() {
 }
 
 export function AssigneePicker({
-  value, onChange, label, disabled, placeholder = "Unassigned",
+  value, onChange, label, disabled, placeholder = "Unassigned", exclude,
 }: {
   value: string | null;
   onChange: (id: string | null) => void;
   label?: string;
   disabled?: boolean;
   placeholder?: string;
+  /** Ids to hide — people already chosen elsewhere. */
+  exclude?: readonly string[];
 }) {
-  const staff = useAssignable();
+  const all = useAssignable();
+  // Keep the current value listed even if excluded, or the Select shows blank.
+  const staff = exclude?.length
+    ? all.filter((s) => s.id === value || !exclude.includes(s.id))
+    : all;
 
   return (
     <Select

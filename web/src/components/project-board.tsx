@@ -4,9 +4,11 @@ import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import {
   AlertCircle, CalendarDays, ChevronDown, Clock, FolderOpen, Loader2,
-  MessageSquare, Paperclip, Plus, Trash2,
+  MessageSquare, Paperclip, Plus, Trash2, UserPlus, Users, X,
 } from "lucide-react";
-import { AssigneeChip, AssigneePicker } from "@/components/assignee-picker";
+import {
+  AssigneeChip, AssigneePicker, useAssignable,
+} from "@/components/assignee-picker";
 import { ProjectTeam } from "@/components/project-team";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,12 +22,12 @@ import {
 import { TaskSheet } from "@/components/task-sheet";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  ApiError, PRIORITY_LABELS, PROJECT_STATUS_LABELS, type Project,
-  type ProjectStatus, type Task, TASK_STATUS_LABELS, type TaskPriority,
-  VERDICT_LABELS, api,
+  ApiError, PRIORITY_LABELS, PROJECT_ROLE_LABELS, PROJECT_STATUS_LABELS,
+  type Project, type ProjectRole, type ProjectStatus, type Task,
+  TASK_STATUS_LABELS, type TaskPriority, VERDICT_LABELS, api,
 } from "@/lib/api";
 import {
-  DUE_TONE, dueChip, PRIORITY_STYLE, progressTone,
+  DUE_TONE, dueChip, initials, PRIORITY_STYLE, progressTone,
   PROJECT_STATUS_STYLE, TASK_STATUS_STYLE, VERDICT_STYLE,
 } from "@/lib/project-ui";
 import { cn } from "@/lib/utils";
@@ -47,6 +49,8 @@ export function ProjectBoard({
   const [formAssignee, setFormAssignee] = useState<string | null>(null);
   const [formChecker, setFormChecker] = useState<string | null>(null);
   const [formLead, setFormLead] = useState<string | null>(null);
+  /** Members chosen before the project exists; added right after it is created. */
+  const [formTeam, setFormTeam] = useState<{ id: string; role: ProjectRole }[]>([]);
 
   const load = useCallback(async () => {
     try {
@@ -102,10 +106,31 @@ export function ProjectBoard({
         description: String(fd.get("description") ?? "").trim() || undefined,
         lead_engineer_id: formLead ?? undefined,
       });
+
+      // Members can only be attached once the project has an id. The lead is
+      // added by the create call itself, so skip them here.
+      const failed: string[] = [];
+      for (const m of formTeam) {
+        if (m.id === formLead) continue;
+        try {
+          await api.projects.members.add(created.id, m.id, m.role);
+        } catch {
+          failed.push(m.id);
+        }
+      }
+
       setNewProject(false);
       setFormLead(null);
+      setFormTeam([]);
       setExpanded(created.id);
       await load();
+
+      if (failed.length) {
+        setError(
+          `Project created, but ${failed.length} member(s) could not be added. ` +
+          "Add them from the project team panel.",
+        );
+      }
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not create the project.");
     } finally {
@@ -431,6 +456,8 @@ export function ProjectBoard({
                   placeholder="Not assigned" />
               </div>
             </div>
+            <TeamStaging team={formTeam} onChange={setFormTeam} leadId={formLead} />
+
             <div className="space-y-2">
               <Label htmlFor="description" className="text-xs font-bold uppercase tracking-wide text-white/80">
                 Description
@@ -443,7 +470,8 @@ export function ProjectBoard({
                 className="h-12 flex-1 rounded-lg bg-brand-green font-semibold text-white hover:bg-brand-green/90">
                 {busy ? <Loader2 className="size-4 animate-spin" /> : "Create project"}
               </Button>
-              <Button type="button" variant="outline" onClick={() => setNewProject(false)}
+              <Button type="button" variant="outline"
+                onClick={() => { setNewProject(false); setFormTeam([]); }}
                 className="h-12 rounded-lg border-white/20 bg-transparent px-6 font-semibold text-white hover:bg-white/10">
                 Cancel
               </Button>
@@ -540,6 +568,99 @@ function Fld({
       </Label>
       <Input id={id} name={id} type={type} required={required} placeholder={placeholder}
         className="h-11 rounded-lg border-white/15 bg-neutral-950 text-sm font-medium text-white placeholder:text-white/30" />
+    </div>
+  );
+}
+
+/* ------------------------------------------------- team picker (new project) */
+
+/** Choose members while the project is still being created. They are attached
+ *  once it exists, since membership needs a project id. */
+function TeamStaging({
+  team, onChange, leadId,
+}: {
+  team: { id: string; role: ProjectRole }[];
+  onChange: (t: { id: string; role: ProjectRole }[]) => void;
+  leadId: string | null;
+}) {
+  const staff = useAssignable();
+  const [pick, setPick] = useState<string | null>(null);
+  const [role, setRole] = useState<ProjectRole>("engineer");
+
+  const taken = new Set(team.map((m) => m.id));
+  const available = staff.filter((p) => !taken.has(p.id) && p.id !== leadId);
+
+  function add() {
+    if (!pick) return;
+    onChange([...team, { id: pick, role }]);
+    setPick(null);
+    setRole("engineer");
+  }
+
+  return (
+    <div className="space-y-2">
+      <Label className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-white/80">
+        <Users className="size-3.5" /> Project team
+        {team.length > 0 && (
+          <span className="font-display tabular-nums text-white/40">{team.length}</span>
+        )}
+      </Label>
+
+      {team.length > 0 && (
+        <ul className="flex flex-wrap gap-2">
+          {team.map((m) => {
+            const person = staff.find((p) => p.id === m.id);
+            return (
+              <li key={m.id}
+                className="flex items-center gap-2 rounded-lg border border-white/15 bg-neutral-950 py-1.5 pl-1.5 pr-2.5">
+                <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-brand-green/15 text-[10px] font-bold text-brand-green">
+                  {initials(person?.full_name ?? "?")}
+                </span>
+                <span className="text-xs font-bold text-white">
+                  {person?.full_name ?? "Unknown"}
+                </span>
+                <span className="text-[10px] font-bold uppercase tracking-wide text-white/45">
+                  {PROJECT_ROLE_LABELS[m.role]}
+                </span>
+                <button type="button"
+                  onClick={() => onChange(team.filter((x) => x.id !== m.id))}
+                  aria-label={`Remove ${person?.full_name ?? "member"}`}
+                  className="ml-0.5 text-white/40 transition-colors hover:text-brand-ember">
+                  <X className="size-3.5" />
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="min-w-[10rem] flex-1">
+          <AssigneePicker value={pick} onChange={setPick}
+            exclude={[...taken, ...(leadId ? [leadId] : [])]}
+            placeholder={available.length ? "Choose someone" : "Everyone is on"} />
+        </div>
+        <Select value={role} onValueChange={(v) => setRole(v as ProjectRole)}>
+          <SelectTrigger className="h-11 w-36 rounded-lg border-white/15 bg-neutral-950 text-sm font-medium text-white">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="rounded-lg">
+            {(Object.keys(PROJECT_ROLE_LABELS) as ProjectRole[])
+              .filter((r) => r !== "lead")
+              .map((r) => (
+                <SelectItem key={r} value={r}>{PROJECT_ROLE_LABELS[r]}</SelectItem>
+              ))}
+          </SelectContent>
+        </Select>
+        <Button type="button" variant="outline" onClick={add} disabled={!pick}
+          className="h-11 shrink-0 rounded-lg border-white/20 bg-transparent px-4 text-xs font-bold text-white hover:bg-white/10 disabled:opacity-40">
+          <UserPlus className="mr-1.5 size-3.5" /> Add
+        </Button>
+      </div>
+
+      <p className="text-[11px] font-medium text-white/40">
+        The lead engineer joins the team automatically. More can be added later.
+      </p>
     </div>
   );
 }

@@ -110,6 +110,40 @@ def _project_team(session: Session, project_id: UUID) -> tuple[int, list[str]]:
     return len(rows), [names.get(r.user_id, "Unknown") for r in ordered]
 
 
+def _sync_lead_membership(session: Session, project: Project, *, actor_id: UUID) -> None:
+    """Make the membership rows agree with `project.lead_engineer_id`.
+
+    Demotes whoever held LEAD, then promotes the new lead — creating their
+    row if they were not on the project at all. Demotion runs first, so
+    promoting an existing member cannot immediately undo itself.
+    """
+    rows = session.exec(
+        select(ProjectMember).where(ProjectMember.project_id == project.id)
+    ).all()
+
+    for row in rows:
+        if row.role is ProjectRole.LEAD and row.user_id != project.lead_engineer_id:
+            row.role = ProjectRole.ENGINEER
+            session.add(row)
+
+    if not project.lead_engineer_id:
+        return
+
+    existing = next(
+        (r for r in rows if r.user_id == project.lead_engineer_id), None
+    )
+    if existing:
+        existing.role = ProjectRole.LEAD
+        session.add(existing)
+    else:
+        session.add(ProjectMember(
+            project_id=project.id,
+            user_id=project.lead_engineer_id,
+            role=ProjectRole.LEAD,
+            added_by_id=actor_id,
+        ))
+
+
 def _project_rollup(session: Session, project: Project) -> dict:
     tasks = session.exec(select(Task).where(Task.project_id == project.id)).all()
     count, names = _project_team(session, project.id)
@@ -203,6 +237,13 @@ def create_project(
     session.add(project)
     session.commit()
     session.refresh(project)
+
+    # The lead is a member too. Without this row they are named on the
+    # project but absent from its team, and membership queries miss them.
+    if project.lead_engineer_id:
+        _sync_lead_membership(session, project, actor_id=user.id)
+        session.commit()
+
     names = _staff_names(session)
     return ProjectOut.model_validate(project).model_copy(
         update=_project_rollup(session, project)
@@ -250,6 +291,13 @@ def update_project(
     session.add(project)
     session.commit()
     session.refresh(project)
+
+    # Keep the membership table in step when the lead changes, so the project
+    # team never disagrees with the lead named on the project.
+    if "lead_engineer_id" in data:
+        _sync_lead_membership(session, project, actor_id=user.id)
+        session.commit()
+
     names = _staff_names(session)
     return ProjectOut.model_validate(project).model_copy(
         update=_project_rollup(session, project)
@@ -271,6 +319,14 @@ def delete_project(
             status.HTTP_409_CONFLICT,
             f"{project.title} has {len(tasks)} task(s). Cancel the project instead.",
         )
+
+    # Membership rows reference the project, so they must go first or the
+    # delete fails on the foreign key.
+    for member in session.exec(
+        select(ProjectMember).where(ProjectMember.project_id == project.id)
+    ).all():
+        session.delete(member)
+
     session.delete(project)
     session.commit()
 
